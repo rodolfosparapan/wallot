@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallot — All Screens</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#020a04;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2rem;color:#fff}
+  h1{font-size:1.4rem;font-weight:800;letter-spacing:-1px;margin-bottom:.25rem}
+  h1 span{color:#22c55e}
+  .subtitle{font-size:.75rem;color:#4ade80;opacity:.7;margin-bottom:2rem;letter-spacing:.1em;text-transform:uppercase}
+  .section-label{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:#4ade80;font-weight:600;margin:1.5rem 0 .75rem;border-left:3px solid #22c55e;padding-left:8px}
+  .screens-row{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:.5rem}
+
+  .phone{width:180px;flex-shrink:0;background:#030f06;border-radius:30px;border:2px solid #0f5c22;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #052e0f}
+  .phone-bar{height:24px;background:#020a04;display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0}
+  .phone-bar span{font-size:9px;color:#4ade80;font-weight:500}
+  .phone-screen{background:#041208;flex:1;display:flex;flex-direction:column;padding:12px;min-height:340px;position:relative;overflow:hidden}
+  .screen-tag{font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:#22c55e;margin-bottom:8px;font-weight:600}
+
+  /* SPLASH */
+  .splash-bg{position:absolute;inset:0;background:#041208;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+  .splash-ring{width:80px;height:80px;border-radius:20px;background:#0a4d1c;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center}
+  .splash-name{font-size:1.5rem;font-weight:800;letter-spacing:-1px;color:#fff}
+  .splash-name span{color:#22c55e}
+  .splash-sub{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#4ade80;opacity:.7}
+
+  /* ONBOARDING */
+  .ob-illo{width:100%;height:110px;background:#0a4d1c;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;justify-content:center}
+  .ob-title{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.2}
+  .ob-sub{font-size:.65rem;color:#86efac;line-height:1.4;margin-bottom:10px}
+  .ob-dots{display:flex;gap:4px;margin-bottom:10px}
+  .ob-dot{height:4px;border-radius:2px}
+  .ob-btn{width:100%;padding:8px;background:#22c55e;border-radius:10px;text-align:center;font-size:.7rem;font-weight:700;color:#052e0f;cursor:pointer}
+
+  /* LOGIN */
+  .login-logo{display:flex;align-items:center;gap:6px;margin-bottom:14px}
+  .login-title{font-size:.9rem;font-weight:700;color:#fff;margin-bottom:3px}
+  .login-sub{font-size:.65rem;color:#86efac;margin-bottom:12px}
+  .input-field{width:100%;background:#0a1f0e;border:1px solid #0f5c22;border-radius:8px;padding:7px 10px;font-size:.65rem;color:#86efac;margin-bottom:6px}
+  .btn-primary{width:100%;padding:8px;background:#22c55e;border-radius:10px;text-align:center;font-size:.7rem;font-weight:700;color:#052e0f;margin-bottom:8px;cursor:pointer}
+  .btn-ghost{width:100%;padding:7px;border:1px solid #0f5c22;border-radius:10px;text-align:center;font-size:.65rem;color:#86efac;margin-bottom:6px}
+  .divider{display:flex;align-items:center;gap:6px;margin:6px 0}
+  .div-line{flex:1;height:1px;background:#0f5c22}
+  .div-txt{font-size:.6rem;color:#4ade80;opacity:.6}
+  .social-row{display:flex;gap:6px}
+  .social-btn{flex:1;padding:6px;border:1px solid #0f5c22;border-radius:8px;text-align:center;font-size:.6rem;color:#86efac}
+
+  /* DASHBOARD */
+  .balance-hero{background:#0a4d1c;border-radius:12px;padding:10px;margin-bottom:8px;border:1px solid #16a34a}
+  .bal-label{font-size:.6rem;color:#86efac;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+  .bal-amount{font-size:1.4rem;font-weight:800;color:#fff;letter-spacing:-1px}
+  .bal-trend{font-size:.6rem;color:#22c55e}
+  .stat-row{display:flex;gap:5px;margin-bottom:8px}
+  .stat-card{flex:1;background:#0a1f0e;border-radius:8px;padding:6px;border:1px solid #0f3d15}
+  .stat-label{font-size:.55rem;color:#4ade80;opacity:.7;text-transform:uppercase;letter-spacing:.05em}
+  .stat-val{font-size:.75rem;font-weight:700;margin-top:1px}
+  .top3-title{font-size:.6rem;color:#86efac;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+  .top3-item{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .top3-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .top3-name{font-size:.62rem;color:#d1fae5;flex:1}
+  .top3-val{font-size:.62rem;font-weight:600;color:#fff}
+  .top3-bar-bg{height:3px;background:#0f3d15;border-radius:2px;margin-top:2px}
+  .top3-bar{height:3px;border-radius:2px}
+
+  /* ADD ENTRY */
+  .tab-row{display:flex;background:#0a1f0e;border-radius:8px;padding:2px;margin-bottom:10px}
+  .tab{flex:1;padding:5px;text-align:center;font-size:.6rem;border-radius:6px}
+  .tab.active{background:#22c55e;color:#052e0f;font-weight:700}
+  .tab.inactive{color:#4ade80}
+  .form-label{font-size:.6rem;color:#86efac;margin-bottom:3px;margin-top:6px}
+  .type-row{display:flex;gap:4px;margin-bottom:6px}
+  .type-btn{flex:1;padding:5px;border-radius:7px;text-align:center;font-size:.6rem;font-weight:600}
+  .type-btn.exp{background:#1f0a0a;border:1px solid #7f1d1d;color:#fca5a5}
+  .type-btn.inc{background:#0a1f0e;border:1px solid #22c55e;color:#22c55e}
+  .cat-grid{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+  .cat-pill{padding:3px 7px;border-radius:999px;font-size:.55rem;border:1px solid #0f5c22;color:#86efac}
+  .cat-pill.sel{background:#22c55e;color:#052e0f;border-color:#22c55e}
+
+  /* AI CHAT */
+  .chat-area{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+  .chat-msg{border-radius:10px;padding:6px 8px;font-size:.6rem;line-height:1.4;max-width:90%}
+  .chat-msg.ai{background:#0a4d1c;color:#d1fae5;align-self:flex-start;border-radius:10px 10px 10px 2px}
+  .chat-msg.user{background:#1a3a20;color:#fff;align-self:flex-end;border-radius:10px 10px 2px 10px}
+  .chat-tag{font-size:.55rem;color:#22c55e;font-weight:700;display:block;margin-bottom:2px}
+  .ai-input-row{display:flex;gap:4px;align-items:center;background:#0a1f0e;border-radius:20px;padding:5px 8px;border:1px solid #0f5c22}
+  .ai-ic-btn{width:22px;height:22px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* ENTRIES */
+  .filter-row{display:flex;gap:4px;margin-bottom:8px}
+  .filter-pill{padding:3px 8px;border-radius:999px;font-size:.55rem;border:1px solid #0f5c22;color:#86efac;white-space:nowrap}
+  .filter-pill.active{background:#22c55e;color:#052e0f;border-color:#22c55e}
+  .entry-item{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #0a2610}
+  .entry-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .entry-info{flex:1;min-width:0}
+  .entry-name{font-size:.65rem;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .entry-meta{font-size:.55rem;color:#4ade80;opacity:.7}
+  .entry-val{font-size:.65rem;font-weight:700}
+
+  /* INSIGHTS */
+  .insights-hero{background:#0a4d1c;border-radius:12px;padding:10px;margin-bottom:8px;border:1px solid #16a34a}
+  .ins-suggestion{padding:5px 8px;background:#0a1f0e;border:1px solid #0f5c22;border-radius:8px;font-size:.58rem;color:#86efac;margin-bottom:3px;cursor:pointer}
+
+  /* LIMITS */
+  .limit-item{margin-bottom:8px}
+  .limit-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+  .limit-name{font-size:.62rem;color:#d1fae5}
+  .limit-vals{font-size:.58rem;color:#4ade80}
+  .limit-bar-bg{height:5px;background:#0a2610;border-radius:3px}
+  .limit-bar{height:5px;border-radius:3px}
+  .alert-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #0a2610}
+  .toggle{width:26px;height:14px;border-radius:7px;background:#22c55e;position:relative;flex-shrink:0}
+  .toggle-dot{position:absolute;right:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff}
+  .toggle.off{background:#0f3d15}
+  .toggle.off .toggle-dot{right:auto;left:2px}
+
+  /* SETTINGS */
+  .settings-section{margin-bottom:10px}
+  .settings-title{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:#4ade80;opacity:.7;margin-bottom:5px}
+  .settings-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #0a2610}
+  .settings-label{font-size:.65rem;color:#d1fae5}
+  .settings-val{font-size:.6rem;color:#4ade80}
+  .avatar-row{display:flex;align-items:center;gap:8px;padding:8px;background:#0a1f0e;border-radius:10px;margin-bottom:10px;border:1px solid #0f3d15}
+  .avatar{width:32px;height:32px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#052e0f;flex-shrink:0}
+
+  /* NAV */
+  .nav{display:flex;justify-content:space-around;padding:6px 4px 4px;border-top:1px solid #0f3d15;background:#020a04;flex-shrink:0;align-items:center}
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .nav-lbl{font-size:7px}
+  .nav-lbl.active{color:#22c55e}
+  .nav-lbl.inactive{color:#0f5c22}
+  .nav-add{width:32px;height:32px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;margin-top:-10px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<h1>Wal<span>lot</span></h1>
+<div class="subtitle">App screens · Dark mode · All 9 screens</div>
+
+<!-- SPLASH -->
+<div class="section-label">1 — Splash</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>●●●</span></div>
+    <div class="phone-screen">
+      <div class="splash-bg">
+        <div class="splash-ring">
+          <svg width="44" height="44" viewBox="0 0 64 64" fill="none">
+            <rect x="8" y="14" width="48" height="30" rx="6" fill="#0a4d1c"/>
+            <rect x="8" y="14" width="48" height="12" rx="6" fill="#0f5c22"/>
+            <rect x="8" y="20" width="48" height="6" fill="#0f5c22"/>
+            <rect x="35" y="23" width="16" height="9" rx="4" fill="#22c55e"/>
+            <path d="M56 23 Q64 19 66 27 Q64 31 56 29Z" fill="#22c55e"/>
+            <path d="M8 23 Q0 19 -2 27 Q0 31 8 29Z" fill="#22c55e"/>
+            <circle cx="22" cy="27" r="4" fill="#22c55e"/>
+          </svg>
+        </div>
+        <div class="splash-name">Wal<span>lot</span></div>
+        <div class="splash-sub">your wallet a lot smarter</div>
+        <div style="display:flex;gap:4px;margin-top:8px">
+          <div style="width:16px;height:5px;border-radius:3px;background:#22c55e"></div>
+          <div style="width:5px;height:5px;border-radius:3px;background:#0f5c22"></div>
+          <div style="width:5px;height:5px;border-radius:3px;background:#0f5c22"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="section-label">2 — Onboarding (3 slides)</div>
+<div class="screens-row">
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>1 / 3</span></div>
+    <div class="phone-screen">
+      <div class="ob-illo">
+        <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="28" fill="#0f5c22"/>
+          <path d="M40 26a2 2 0 012 2v8a2 2 0 01-4 0v-8a2 2 0 012-2z" fill="#22c55e"/>
+          <circle cx="40" cy="52" r="3" fill="#22c55e"/>
+          <path d="M28 36a12 12 0 0024 0" stroke="#22c55e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="ob-title">Just talk to Wallot</div>
+      <div class="ob-sub">Send a voice message and Wallot automatically identifies the value, type and category of the entry.</div>
+      <div class="ob-dots">
+        <div class="ob-dot" style="width:16px;background:#22c55e"></div>
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+      </div>
+      <div class="ob-btn">Next →</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>2 / 3</span></div>
+    <div class="phone-screen">
+      <div class="ob-illo">
+        <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+          <rect x="18" y="22" width="44" height="36" rx="6" fill="#0f5c22"/>
+          <circle cx="40" cy="36" r="8" fill="#22c55e" opacity=".3"/>
+          <circle cx="40" cy="36" r="4" fill="#22c55e"/>
+          <rect x="30" y="52" width="20" height="3" rx="1.5" fill="#22c55e" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="ob-title">Snap a receipt</div>
+      <div class="ob-sub">Take a photo of any receipt or bill. Wallot reads it and logs the entry instantly with AI.</div>
+      <div class="ob-dots">
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+        <div class="ob-dot" style="width:16px;background:#22c55e"></div>
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+      </div>
+      <div class="ob-btn">Next →</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>3 / 3</span></div>
+    <div class="phone-screen">
+      <div class="ob-illo">
+        <svg width="70" height="70" viewBox="0 0 80 80" fill="none">
+          <rect x="16" y="30" width="48" height="28" rx="6" fill="#0f5c22"/>
+          <path d="M24 50l8-10 6 6 6-8 10 12" stroke="#22c55e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="52" cy="26" r="8" fill="#22c55e"/>
+          <path d="M49 26h6M52 23v6" stroke="#0f5c22" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="ob-title">AI does the rest</div>
+      <div class="ob-sub">Get smart reports, insights and budget alerts — all generated automatically by Wallot AI.</div>
+      <div class="ob-dots">
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+        <div class="ob-dot" style="width:5px;background:#0f5c22"></div>
+        <div class="ob-dot" style="width:16px;background:#22c55e"></div>
+      </div>
+      <div class="ob-btn">Get started</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOGIN / REGISTER -->
+<div class="section-label">3 — Login / Register</div>
+<div class="screens-row">
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>sign in</span></div>
+    <div class="phone-screen">
+      <div class="login-logo">
+        <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+          <rect x="8" y="14" width="48" height="30" rx="6" fill="#0a4d1c"/>
+          <rect x="35" y="23" width="16" height="9" rx="4" fill="#22c55e"/>
+          <circle cx="22" cy="27" r="4" fill="#22c55e"/>
+        </svg>
+        <span style="font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-0.5px">Wal<span style="color:#22c55e">lot</span></span>
+      </div>
+      <div class="login-title">Welcome back</div>
+      <div class="login-sub">Sign in to your account</div>
+      <div class="input-field">Email address</div>
+      <div class="input-field">Password</div>
+      <div style="text-align:right;margin-bottom:10px"><span style="font-size:.6rem;color:#22c55e">Forgot password?</span></div>
+      <div class="btn-primary">Sign in</div>
+      <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+      <div class="social-row">
+        <div class="social-btn">G&nbsp; Google</div>
+        <div class="social-btn">&nbsp; Apple</div>
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:.6rem;color:#4ade80">No account? <span style="color:#22c55e;font-weight:600">Sign up</span></div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>register</span></div>
+    <div class="phone-screen">
+      <div class="login-logo">
+        <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+          <rect x="8" y="14" width="48" height="30" rx="6" fill="#0a4d1c"/>
+          <rect x="35" y="23" width="16" height="9" rx="4" fill="#22c55e"/>
+          <circle cx="22" cy="27" r="4" fill="#22c55e"/>
+        </svg>
+        <span style="font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-0.5px">Wal<span style="color:#22c55e">lot</span></span>
+      </div>
+      <div class="login-title">Create account</div>
+      <div class="login-sub">Free forever. No credit card needed.</div>
+      <div class="input-field">Full name</div>
+      <div class="input-field">Email address</div>
+      <div class="input-field">Password</div>
+      <div class="btn-primary">Create account</div>
+      <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+      <div class="social-row">
+        <div class="social-btn">G&nbsp; Google</div>
+        <div class="social-btn">&nbsp; Apple</div>
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:.6rem;color:#4ade80">Have account? <span style="color:#22c55e;font-weight:600">Sign in</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DASHBOARD -->
+<div class="section-label">4 — Dashboard</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>Mar 2026</span></div>
+    <div class="phone-screen">
+      <div class="balance-hero">
+        <div class="bal-label">Available balance</div>
+        <div class="bal-amount">R$ 4.820</div>
+        <div class="bal-trend">↑ +12% vs last month</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Income</div>
+          <div class="stat-val" style="color:#22c55e">R$6.500</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Expenses</div>
+          <div class="stat-val" style="color:#f87171">R$1.680</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Saved</div>
+          <div class="stat-val" style="color:#fff">R$800</div>
+        </div>
+      </div>
+      <div class="top3-title">Top 3 expenses this month</div>
+      <div class="top3-item">
+        <div class="top3-dot" style="background:#22c55e"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between"><span class="top3-name">Housing</span><span class="top3-val">R$1.800</span></div>
+          <div class="top3-bar-bg"><div class="top3-bar" style="background:#22c55e;width:100%"></div></div>
+        </div>
+      </div>
+      <div class="top3-item">
+        <div class="top3-dot" style="background:#86efac"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between"><span class="top3-name">Food</span><span class="top3-val">R$640</span></div>
+          <div class="top3-bar-bg"><div class="top3-bar" style="background:#86efac;width:56%"></div></div>
+        </div>
+      </div>
+      <div class="top3-item">
+        <div class="top3-dot" style="background:#4ade80"></div>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between"><span class="top3-name">Transport</span><span class="top3-val">R$320</span></div>
+          <div class="top3-bar-bg"><div class="top3-bar" style="background:#4ade80;width:28%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" fill="#22c55e"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl active">Home</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="#0f5c22" stroke-width="1"/><path d="M9 6v3l2 2" stroke="#0f5c22" stroke-width="1" stroke-linecap="round"/></svg><div class="nav-lbl inactive">Entries</div></div>
+      <div class="nav-add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#052e0f" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="12" height="9" rx="2" stroke="#0f5c22" stroke-width="1"/><path d="M3 8h12" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Insights</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="#0f5c22" stroke-width="1"/><path d="M3 15a6 6 0 0112 0" stroke="#0f5c22" stroke-width="1" stroke-linecap="round"/></svg><div class="nav-lbl inactive">Settings</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ENTRY -->
+<div class="section-label">5 — Add Entry (Manual + AI)</div>
+<div class="screens-row">
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>add entry</span></div>
+    <div class="phone-screen">
+      <div class="screen-tag">Manual mode</div>
+      <div class="tab-row">
+        <div class="tab active">Manual</div>
+        <div class="tab inactive">AI — voice / photo</div>
+      </div>
+      <div class="form-label">Type</div>
+      <div class="type-row">
+        <div class="type-btn exp">Expense</div>
+        <div class="type-btn inc">Income</div>
+      </div>
+      <div class="form-label">Amount</div>
+      <div class="input-field" style="font-size:.85rem;font-weight:700;color:#fff">R$ 189,00</div>
+      <div class="form-label">Category</div>
+      <div class="cat-grid">
+        <div class="cat-pill sel">Food</div>
+        <div class="cat-pill">Housing</div>
+        <div class="cat-pill">Transport</div>
+        <div class="cat-pill">Health</div>
+        <div class="cat-pill">Shopping</div>
+        <div class="cat-pill">Other</div>
+      </div>
+      <div class="form-label">Description</div>
+      <div class="input-field">e.g. Lunch at restaurant</div>
+      <div style="margin-top:8px" class="btn-primary">Save entry</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>add entry</span></div>
+    <div class="phone-screen">
+      <div class="screen-tag">AI mode</div>
+      <div class="tab-row">
+        <div class="tab inactive">Manual</div>
+        <div class="tab active">AI — voice / photo</div>
+      </div>
+      <div class="chat-area">
+        <div class="chat-msg ai"><span class="chat-tag">WALLOT</span>Hey! Send a voice message, snap a photo or just type what you spent.</div>
+        <div class="chat-msg user">Lunch at Outback, R$ 87</div>
+        <div class="chat-msg ai"><span class="chat-tag">WALLOT</span>Got it! Logged R$87 under Food. Within your monthly budget.</div>
+        <div class="chat-msg user" style="padding:5px 8px">
+          <svg width="72" height="26" viewBox="0 0 72 26" fill="none"><path d="M4 13 Q10 4 16 13 Q22 22 28 13 Q34 4 40 13 Q46 22 52 13 Q58 4 68 13" stroke="#22c55e" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          <div style="font-size:.55rem;color:#86efac;margin-top:2px">Voice message</div>
+        </div>
+        <div class="chat-msg ai"><span class="chat-tag">WALLOT</span>Pharmacy R$43,20 · Health. Logged!</div>
+      </div>
+      <div class="ai-input-row">
+        <div style="flex:1;font-size:.6rem;color:#4ade80">Message, voice or photo...</div>
+        <div class="ai-ic-btn"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2a2 2 0 012 2v3a2 2 0 01-4 0V4a2 2 0 012-2z" stroke="#052e0f" stroke-width="1.2"/><path d="M4 7a3 3 0 006 0M7 10v2" stroke="#052e0f" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        <div class="ai-ic-btn"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="8" rx="2" stroke="#052e0f" stroke-width="1.2"/><circle cx="7" cy="7" r="2" fill="#052e0f"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ENTRIES -->
+<div class="section-label">6 — Entries</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>entries</span></div>
+    <div class="phone-screen">
+      <div class="filter-row">
+        <div class="filter-pill active">All</div>
+        <div class="filter-pill">Expenses</div>
+        <div class="filter-pill">Income</div>
+        <div class="filter-pill">Food</div>
+      </div>
+      <div class="input-field" style="margin-bottom:8px">Search entries...</div>
+      <div style="font-size:.58rem;color:#4ade80;opacity:.7;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em">Today</div>
+      <div class="entry-item">
+        <div class="entry-icon" style="background:#1a2010"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2L2 5v7h10V5L7 2z" stroke="#86efac" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+        <div class="entry-info"><div class="entry-name">Rent</div><div class="entry-meta">Housing · 21 Mar</div></div>
+        <div class="entry-val" style="color:#f87171">-R$1.800</div>
+      </div>
+      <div class="entry-item">
+        <div class="entry-icon" style="background:#0a2014"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4.5" stroke="#22c55e" stroke-width="1.2"/><path d="M7 5v2l1.5 1.5" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        <div class="entry-info"><div class="entry-name">Salary</div><div class="entry-meta">Income · 21 Mar</div></div>
+        <div class="entry-val" style="color:#22c55e">+R$6.500</div>
+      </div>
+      <div style="font-size:.58rem;color:#4ade80;opacity:.7;margin:6px 0 4px;text-transform:uppercase;letter-spacing:.08em">Yesterday</div>
+      <div class="entry-item">
+        <div class="entry-icon" style="background:#1a1a0a"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="7" rx="1.5" stroke="#fbbf24" stroke-width="1.2"/></svg></div>
+        <div class="entry-info"><div class="entry-name">Outback lunch</div><div class="entry-meta">Food · 20 Mar</div></div>
+        <div class="entry-val" style="color:#f87171">-R$87</div>
+      </div>
+      <div class="entry-item">
+        <div class="entry-icon" style="background:#0a1a20"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#60a5fa" stroke-width="1.2"/><path d="M5 7h4M7 5v4" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        <div class="entry-info"><div class="entry-name">Pharmacy</div><div class="entry-meta">Health · 20 Mar</div></div>
+        <div class="entry-val" style="color:#f87171">-R$43</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Home</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" fill="#22c55e"/><path d="M9 6v3l2 2" stroke="#052e0f" stroke-width="1.2" stroke-linecap="round"/></svg><div class="nav-lbl active">Entries</div></div>
+      <div class="nav-add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#052e0f" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="12" height="9" rx="2" stroke="#0f5c22" stroke-width="1"/><path d="M3 8h12" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Insights</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="#0f5c22" stroke-width="1"/><path d="M3 15a6 6 0 0112 0" stroke="#0f5c22" stroke-width="1" stroke-linecap="round"/></svg><div class="nav-lbl inactive">Settings</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="section-label">7 — Insights (Ask Wallot)</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>insights</span></div>
+    <div class="phone-screen">
+      <div class="insights-hero">
+        <div style="font-size:.6rem;color:#86efac;margin-bottom:4px">AI insight · March 2026</div>
+        <div style="font-size:.75rem;font-weight:600;color:#fff;line-height:1.3">You spent 23% less on food. Keep it up and save R$960 in April.</div>
+      </div>
+      <div class="chat-area">
+        <div class="chat-msg ai"><span class="chat-tag">WALLOT</span>Ask me anything about your finances!</div>
+        <div class="chat-msg user">What did I spend most on?</div>
+        <div class="chat-msg ai"><span class="chat-tag">WALLOT</span>Housing was your biggest expense at R$1.800 — 46% of total spending this month.</div>
+      </div>
+      <div style="font-size:.58rem;color:#4ade80;opacity:.7;margin-bottom:4px">Suggested questions</div>
+      <div class="ins-suggestion">How much did I save this month?</div>
+      <div class="ins-suggestion">Which category can I cut back?</div>
+      <div class="ins-suggestion">Compare March vs February</div>
+      <div class="ai-input-row" style="margin-top:8px">
+        <div style="flex:1;font-size:.6rem;color:#4ade80">Ask Wallot anything...</div>
+        <div class="ai-ic-btn"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="#052e0f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Home</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Entries</div></div>
+      <div class="nav-add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#052e0f" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="12" height="9" rx="2" fill="#22c55e"/><path d="M3 8h12" stroke="#052e0f" stroke-width="1"/></svg><div class="nav-lbl active">Insights</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="#0f5c22" stroke-width="1"/><path d="M3 15a6 6 0 0112 0" stroke="#0f5c22" stroke-width="1" stroke-linecap="round"/></svg><div class="nav-lbl inactive">Settings</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIMITS & ALERTS -->
+<div class="section-label">8 — Limits & Alerts</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>limits</span></div>
+    <div class="phone-screen">
+      <div class="screen-tag">Budget limits</div>
+      <div class="limit-item">
+        <div class="limit-header"><span class="limit-name">Food</span><span class="limit-vals">R$640 / R$800</span></div>
+        <div class="limit-bar-bg"><div class="limit-bar" style="background:#22c55e;width:80%"></div></div>
+      </div>
+      <div class="limit-item">
+        <div class="limit-header"><span class="limit-name">Transport</span><span class="limit-vals">R$320 / R$400</span></div>
+        <div class="limit-bar-bg"><div class="limit-bar" style="background:#22c55e;width:75%"></div></div>
+      </div>
+      <div class="limit-item">
+        <div class="limit-header"><span class="limit-name">Shopping</span><span class="limit-vals">R$490 / R$400</span></div>
+        <div class="limit-bar-bg"><div class="limit-bar" style="background:#f87171;width:100%"></div></div>
+      </div>
+      <div style="font-size:.58rem;color:#f87171;margin-bottom:8px">⚠ Shopping limit exceeded!</div>
+      <div class="screen-tag">Alerts</div>
+      <div class="alert-item">
+        <div style="font-size:.62rem;color:#d1fae5">Daily spending over R$200</div>
+        <div class="toggle"><div class="toggle-dot"></div></div>
+      </div>
+      <div class="alert-item">
+        <div style="font-size:.62rem;color:#d1fae5">Category limit at 80%</div>
+        <div class="toggle"><div class="toggle-dot"></div></div>
+      </div>
+      <div class="alert-item">
+        <div style="font-size:.62rem;color:#d1fae5">Weekly AI summary</div>
+        <div class="toggle"><div class="toggle-dot"></div></div>
+      </div>
+      <div class="alert-item">
+        <div style="font-size:.62rem;color:#d1fae5">Monthly report</div>
+        <div class="toggle off"><div class="toggle-dot"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="section-label">9 — Settings</div>
+<div class="screens-row">
+  <div class="phone">
+    <div class="phone-bar"><span>9:41</span><span>settings</span></div>
+    <div class="phone-screen">
+      <div class="avatar-row">
+        <div class="avatar">RC</div>
+        <div>
+          <div style="font-size:.75rem;font-weight:600;color:#fff">Ricardo Costa</div>
+          <div style="font-size:.6rem;color:#22c55e">Pro plan · Active</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Preferences</div>
+        <div class="settings-item"><span class="settings-label">Language</span><span class="settings-val">Portuguese ›</span></div>
+        <div class="settings-item"><span class="settings-label">Currency</span><span class="settings-val">BRL R$ ›</span></div>
+        <div class="settings-item"><span class="settings-label">Theme</span><span class="settings-val">Dark ›</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Finance</div>
+        <div class="settings-item"><span class="settings-label">Limits & Alerts</span><span style="font-size:.6rem;color:#0f5c22">›</span></div>
+        <div class="settings-item"><span class="settings-label">Categories</span><span style="font-size:.6rem;color:#0f5c22">›</span></div>
+        <div class="settings-item"><span class="settings-label">Connected accounts</span><span style="font-size:.6rem;color:#0f5c22">›</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Account</div>
+        <div class="settings-item"><span class="settings-label">Notifications</span><span style="font-size:.6rem;color:#0f5c22">›</span></div>
+        <div class="settings-item"><span class="settings-label">Privacy & data</span><span style="font-size:.6rem;color:#0f5c22">›</span></div>
+        <div class="settings-item"><span class="settings-label" style="color:#f87171">Sign out</span></div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Home</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Entries</div></div>
+      <div class="nav-add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="#052e0f" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="12" height="9" rx="2" stroke="#0f5c22" stroke-width="1"/></svg><div class="nav-lbl inactive">Insights</div></div>
+      <div class="nav-item"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" fill="#22c55e"/><path d="M3 15a6 6 0 0112 0" stroke="#22c55e" stroke-width="1.2" stroke-linecap="round"/></svg><div class="nav-lbl active">Settings</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

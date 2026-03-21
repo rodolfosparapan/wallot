@@ -4,11 +4,11 @@
     "slug": "wallot",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/app-icons/icon-1024.svg",
     "scheme": "wallot",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/splash/splash-portrait.svg",
       "resizeMode": "contain",
       "backgroundColor": "#041208"
     },
@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/app-icons/icon-192.svg",
         "backgroundColor": "#041208"
       },
       "package": "com.wallot.app",
@@ -36,7 +36,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/app-icons/favicon-32.svg"
     },
     "plugins": [
       "expo-router",

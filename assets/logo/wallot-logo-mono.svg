@@ -1,0 +1,14 @@
+<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="120" fill="#0a4d1c"/>
+  <rect x="20" y="22" width="72" height="52" rx="11" fill="rgba(255,255,255,0.15)"/>
+  <rect x="20" y="22" width="72" height="52" rx="11" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+  <rect x="20" y="22" width="72" height="20" rx="11" fill="rgba(255,255,255,0.1)"/>
+  <rect x="20" y="34" width="72" height="8" fill="rgba(255,255,255,0.1)"/>
+  <rect x="52" y="36" width="32" height="16" rx="6" fill="rgba(255,255,255,0.8)"/>
+  <path d="M92 34 Q110 26 114 40 Q110 50 92 46Z" fill="rgba(255,255,255,0.8)"/>
+  <path d="M20 34 Q2 26 -2 40 Q2 50 20 46Z" fill="rgba(255,255,255,0.8)"/>
+  <circle cx="38" cy="42" r="7" fill="rgba(255,255,255,0.8)"/>
+  <text x="114" y="66" font-family="Arial Black, sans-serif" font-weight="900" font-size="50" fill="#ffffff" letter-spacing="-2">Wal</text>
+  <text x="228" y="66" font-family="Arial Black, sans-serif" font-weight="900" font-size="50" fill="rgba(255,255,255,0.7)" letter-spacing="-2">lot</text>
+  <text x="114" y="88" font-family="Helvetica Neue, Arial, sans-serif" font-weight="300" font-size="12" fill="rgba(255,255,255,0.6)" letter-spacing="2.5">YOUR WALLET A LOT SMARTER</text>
+</svg>

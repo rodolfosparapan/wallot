@@ -1,0 +1,14 @@
+<svg width="1284" height="2778" viewBox="0 0 1284 2778" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1284" height="2778" fill="#041208"/>
+  <ellipse cx="642" cy="1389" rx="500" ry="500" fill="#0a4d1c" opacity="0.3"/>
+  <rect x="492" y="1189" width="300" height="210" rx="40" fill="#0a4d1c"/>
+  <rect x="492" y="1189" width="300" height="210" rx="40" stroke="#22c55e" stroke-width="4"/>
+  <rect x="492" y="1189" width="300" height="80" rx="40" fill="#0f5c22"/>
+  <rect x="492" y="1242" width="300" height="37" fill="#0f5c22"/>
+  <rect x="640" y="1267" width="110" height="60" rx="30" fill="#22c55e"/>
+  <path d="M792 1258 Q840 1234 856 1294 Q840 1322 792 1310Z" fill="#22c55e"/>
+  <path d="M492 1258 Q444 1234 428 1294 Q444 1322 492 1310Z" fill="#22c55e"/>
+  <circle cx="560" cy="1294" r="32" fill="#22c55e"/>
+  <text x="642" y="1490" font-family="Helvetica Neue,Arial,sans-serif" font-weight="800" font-size="110" fill="#ffffff" letter-spacing="-5" text-anchor="middle">Wal<tspan fill="#22c55e">lot</tspan></text>
+  <text x="642" y="1550" font-family="Helvetica Neue,Arial,sans-serif" font-weight="300" font-size="32" fill="#86efac" letter-spacing="6" text-anchor="middle">YOUR WALLET A LOT SMARTER</text>
+</svg>

@@ -1,5 +1,6 @@
 import { Tabs, router } from 'expo-router'
 import { TouchableOpacity, View, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/theme'
 
 function AddButton() {
@@ -27,9 +28,10 @@ export default function TabLayout() {
           borderTopWidth: 1,
           height: 60,
           paddingBottom: 8,
+          overflow: 'visible',
         },
         tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.bgMid,
+        tabBarInactiveTintColor: '#4ade80',
         tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
       }}
     >
@@ -37,14 +39,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <TabIcon type="home" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="entries"
         options={{
           title: 'Entries',
-          tabBarIcon: ({ color }) => <TabIcon type="entries" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -58,49 +60,17 @@ export default function TabLayout() {
         name="insights"
         options={{
           title: 'Insights',
-          tabBarIcon: ({ color }) => <TabIcon type="insights" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <TabIcon type="settings" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} />,
         }}
       />
     </Tabs>
-  )
-}
-
-function TabIcon({ type, color }: { type: string; color: string }) {
-  const size = 20
-  // Simple SVG-like icons using View shapes
-  if (type === 'home') {
-    return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: 14, height: 10, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-      </View>
-    )
-  }
-  if (type === 'entries') {
-    return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: 14, height: 14, borderWidth: 1.5, borderColor: color, borderRadius: 7 }} />
-      </View>
-    )
-  }
-  if (type === 'insights') {
-    return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: 14, height: 10, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-      </View>
-    )
-  }
-  // settings
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ width: 12, height: 12, borderWidth: 1.5, borderColor: color, borderRadius: 6 }} />
-    </View>
   )
 }
 

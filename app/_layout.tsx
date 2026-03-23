@@ -27,7 +27,8 @@ export default function RootLayout() {
           router.replace('/(tabs)')
         } else {
           setUser(null)
-          router.replace('/auth/login')
+          // First launch (no session yet) → show onboarding; explicit sign-out → go to login
+          router.replace(event === 'INITIAL_SESSION' ? '/auth/onboarding' : '/auth/login')
         }
 
         setLoading(false)

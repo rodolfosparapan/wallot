@@ -28,6 +28,11 @@ React Native + Expo app with AI-powered financial tracking via voice, photo and 
 npm install
 ```
 
+**Note for Windows users:** If you encounter an error about `'rm' is not recognized`, use:
+```bash
+npm install --legacy-peer-deps
+```
+
 ### 2. Set up Supabase
 
 1. Create a project at [supabase.com](https://supabase.com)

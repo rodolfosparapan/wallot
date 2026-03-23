@@ -28,7 +28,7 @@ export default function AddEntry() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
-          <Text style={styles.closeText}>✕</Text>
+          <Text style={styles.closeText}>×</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Entry</Text>
         <View style={{ width: 32 }} />
@@ -63,7 +63,7 @@ export default function AddEntry() {
   )
 }
 
-// ── Manual Form ───────────────────────────────────────────────────────────────
+// Manual Form
 function ManualForm({ user, createEntry }: any) {
   const [type, setType] = useState<EntryType>('expense')
   const [amount, setAmount] = useState('')
@@ -171,12 +171,12 @@ function ManualForm({ user, createEntry }: any) {
   )
 }
 
-// ── AI Form ───────────────────────────────────────────────────────────────────
+// AI Form
 function AIForm({ user, createEntry }: any) {
   const [messages, setMessages] = useState<AIMessage[]>([
     {
       role: 'assistant',
-      content: "Hey! Send a voice message, snap a photo or just type what you spent. I'll take care of the rest! 🎙️📸",
+      content: "Hey! Send a voice message, snap a photo or just type what you spent. I’ll take care of the rest! 🎤 📸",
     },
   ])
   const [input, setInput] = useState('')
@@ -199,9 +199,9 @@ function AIForm({ user, createEntry }: any) {
         date: new Date().toISOString(),
         source,
       })
-      return `Got it! Logged **${parsed.description}** — ${parsed.category} · R$${parsed.amount.toFixed(2)}. ✅`
+      return `Got it! Logged **${parsed.description}** — ${parsed.category} · R$${parsed.amount.toFixed(2)} ✓`
     } catch {
-      return "Sorry, I couldn't understand that. Please try again or use manual mode."
+      return "Sorry, I couldn’t understand that. Please try again or use manual mode."
     }
   }
 
@@ -238,14 +238,14 @@ function AIForm({ user, createEntry }: any) {
     setRecording(null)
     if (!uri) return
 
-    addMsg({ role: 'user', content: '🎙️ Voice message sent' })
+    addMsg({ role: 'user', content: '🎤 Voice message sent' })
     setAiLoading(true)
     try {
       const transcript = await transcribeAudio(uri)
       const reply = await processEntry(transcript, 'voice')
       addMsg({ role: 'assistant', content: reply })
     } catch {
-      addMsg({ role: 'assistant', content: "Couldn't process the audio. Try again!" })
+      addMsg({ role: 'assistant', content: "Couldn’t process the audio. Try again!" })
     }
     setAiLoading(false)
   }
@@ -271,10 +271,10 @@ function AIForm({ user, createEntry }: any) {
       })
       addMsg({
         role: 'assistant',
-        content: `Receipt scanned! Logged **${parsed.description}** · ${parsed.category} · R$${parsed.amount.toFixed(2)} ✅`,
+        content: `Receipt scanned! Logged **${parsed.description}** — ${parsed.category} · R$${parsed.amount.toFixed(2)} ✓`,
       })
     } catch {
-      addMsg({ role: 'assistant', content: "Couldn't read the receipt. Try a clearer photo!" })
+      addMsg({ role: 'assistant', content: "Couldn’t read the receipt. Try a clearer photo!" })
     }
     setAiLoading(false)
   }
@@ -330,14 +330,14 @@ function AIForm({ user, createEntry }: any) {
           style={[styles.aiBtn, isRecording && { backgroundColor: Colors.expense }]}
           onPress={isRecording ? stopRecording : startRecording}
         >
-          <Text style={{ fontSize: 16 }}>{isRecording ? '⏹' : '🎙️'}</Text>
+          <Text style={{ fontSize: 16 }}>{isRecording ? '■' : '🎤'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.aiBtn} onPress={pickImage}>
           <Text style={{ fontSize: 16 }}>📸</Text>
         </TouchableOpacity>
         {input.length > 0 && (
           <TouchableOpacity style={[styles.aiBtn, { backgroundColor: Colors.primary }]} onPress={sendText}>
-            <Text style={{ fontSize: 14, color: Colors.bg, fontWeight: '700' }}>→</Text>
+            <Text style={{ fontSize: 14, color: Colors.bg, fontWeight: '700' }}>↑</Text>
           </TouchableOpacity>
         )}
       </View>

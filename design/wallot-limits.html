@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallot — Limits & Alerts</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:       #22c55e;
+    --green-deep:  #14532d;
+    --green-dark:  #166534;
+    --green-mid:   #16a34a;
+    --green-light: #dcfce7;
+    --green-soft:  #f0fdf4;
+    --white:       #ffffff;
+    --bg:          #f7f9f8;
+    --text:        #111917;
+    --text-mid:    #3d6b52;
+    --text-muted:  #7a9e8a;
+    --text-dim:    #b0caba;
+    --red:         #ef4444;
+    --red-soft:    #fef2f2;
+    --red-mid:     #dc2626;
+    --yellow:      #f59e0b;
+    --yellow-soft: #fefce8;
+    --border:      rgba(0,0,0,0.07);
+    --shadow-sm:   0 1px 4px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.08);
+    --shadow-green:0 8px 32px rgba(20,83,45,0.28);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:#dde8e1;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh;
+    font-family:'Bricolage Grotesque', sans-serif;
+  }
+
+  .phone {
+    width:393px; height:852px;
+    background:var(--bg);
+    border-radius:52px;
+    border:10px solid #111;
+    box-shadow:0 0 0 1.5px #2a2a2a, 0 50px 100px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.9);
+    position:relative; overflow:hidden;
+  }
+  .phone::before {
+    content:''; position:absolute; left:-13px; top:120px;
+    width:4px; height:32px; background:#111; border-radius:2px 0 0 2px;
+    box-shadow:0 44px 0 #111, 0 88px 0 #111;
+  }
+  .phone::after {
+    content:''; position:absolute; right:-13px; top:150px;
+    width:4px; height:60px; background:#111; border-radius:0 2px 2px 0;
+  }
+
+  .screen {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  .island {
+    width:120px; height:34px; background:#0a0a0a;
+    border-radius:20px; margin:14px auto 0; flex-shrink:0; z-index:10;
+  }
+
+  /* STATUS */
+  .status {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 28px 0; flex-shrink:0;
+    font-family:'DM Mono', monospace; font-size:12px; font-weight:500; color:var(--text);
+  }
+  .status-icons { display:flex; gap:6px; align-items:center; }
+
+  /* HEADER */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px 10px; flex-shrink:0;
+  }
+  .page-title { font-size:24px; font-weight:800; color:var(--text); }
+  .add-btn {
+    width:40px; height:40px; border-radius:14px;
+    background:var(--green-deep); border:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 3px 12px rgba(20,83,45,0.25);
+  }
+  .add-btn svg { width:18px; height:18px; color:#fff; }
+
+  /* SCROLLABLE */
+  .content {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    scrollbar-width:none; padding:0 0 100px;
+  }
+  .content::-webkit-scrollbar { display:none; }
+
+  /* SECTION HEADER */
+  .sec-hdr {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 22px 10px;
+  }
+  .sec-title { font-size:16px; font-weight:800; color:var(--text); }
+  .sec-link  { font-size:12px; color:var(--green-mid); font-weight:600; cursor:pointer; }
+
+  /* ── MONTHLY OVERVIEW STRIP ── */
+  .overview-strip {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:10px; padding:4px 18px 18px;
+  }
+  .ov-card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:18px; padding:12px 14px;
+    box-shadow:var(--shadow-sm); text-align:center;
+  }
+  .ov-icon {
+    width:30px; height:30px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 7px;
+  }
+  .ov-icon svg { width:15px; height:15px; }
+  .ov-label { font-size:10px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+  .ov-val   { font-size:16px; font-weight:800; font-family:'DM Mono', monospace; margin-top:2px; }
+
+  /* ── LIMIT CARDS ── */
+  .limits { padding:0 18px; display:flex; flex-direction:column; gap:10px; }
+
+  .limit-card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:22px; padding:16px 18px;
+    box-shadow:var(--shadow-sm);
+    cursor:pointer; transition:box-shadow 0.2s;
+  }
+  .limit-card:hover { box-shadow:var(--shadow-md); }
+
+  .limit-card.warning { border-color:rgba(245,158,11,0.3); background:#fffdf5; }
+  .limit-card.danger  { border-color:rgba(239,68,68,0.25); background:var(--red-soft); }
+
+  .limit-top {
+    display:flex; align-items:center; gap:12px; margin-bottom:13px;
+  }
+  .limit-icon {
+    width:42px; height:42px; border-radius:14px;
+    background:var(--bg); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .limit-icon svg { width:20px; height:20px; color:var(--text-mid); }
+  .limit-card.warning .limit-icon { background:#fef3c7; border-color:rgba(245,158,11,0.2); }
+  .limit-card.warning .limit-icon svg { color:var(--yellow); }
+  .limit-card.danger  .limit-icon { background:#fee2e2; border-color:rgba(239,68,68,0.2); }
+  .limit-card.danger  .limit-icon svg { color:var(--red); }
+
+  .limit-info { flex:1; min-width:0; }
+  .limit-name { font-size:15px; font-weight:800; color:var(--text); }
+  .limit-sub  { font-size:11px; color:var(--text-muted); margin-top:1px; font-family:'DM Mono', monospace; }
+
+  .limit-right { text-align:right; flex-shrink:0; }
+  .limit-pct {
+    font-size:15px; font-weight:800; font-family:'DM Mono', monospace;
+    color:var(--text-mid);
+  }
+  .limit-card.warning .limit-pct { color:var(--yellow); }
+  .limit-card.danger  .limit-pct { color:var(--red); }
+  .limit-remaining { font-size:10px; color:var(--text-dim); margin-top:2px; }
+
+  /* Progress bar */
+  .limit-track {
+    height:7px; background:var(--bg);
+    border-radius:4px; overflow:hidden;
+    border:1px solid var(--border);
+    margin-bottom:10px;
+  }
+  .limit-fill {
+    height:100%; border-radius:4px;
+    transition:width 0.8s ease;
+  }
+  .fill-green  { background:linear-gradient(to right, #4ade80, #22c55e); }
+  .fill-yellow { background:linear-gradient(to right, #fbbf24, #f59e0b); }
+  .fill-red    { background:linear-gradient(to right, #f87171, #ef4444); }
+
+  .limit-bottom {
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .limit-amounts { font-size:11px; color:var(--text-muted); font-family:'DM Mono', monospace; }
+  .limit-amounts strong { color:var(--text); font-weight:700; }
+
+  /* Alert badge */
+  .alert-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:10px; font-weight:700;
+    border-radius:8px; padding:3px 9px;
+    text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .alert-badge svg { width:11px; height:11px; }
+  .badge-yellow { background:#fef3c7; color:#92400e; }
+  .badge-red    { background:#fee2e2; color:var(--red-mid); }
+  .badge-green  { background:var(--green-light); color:var(--green-dark); }
+
+  /* all-clear full width card */
+  .allclear-card {
+    margin:4px 18px 18px;
+    background:var(--green-light);
+    border:1px solid rgba(34,197,94,0.2);
+    border-radius:18px; padding:16px 20px;
+    display:flex; align-items:center; gap:14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .allclear-icon {
+    width:40px; height:40px; border-radius:14px;
+    background:var(--green); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 10px rgba(34,197,94,0.3);
+  }
+  .allclear-icon svg { width:20px; height:20px; color:#fff; }
+  .allclear-title { font-size:15px; font-weight:800; color:var(--green-dark); }
+  .allclear-sub   { font-size:12px; color:var(--green-mid); margin-top:2px; }
+  .divider { height:1px; background:var(--border); margin:18px 18px 0; }
+
+  /* ── ALERTS SECTION ── */
+  .alerts { padding:0 18px; display:flex; flex-direction:column; gap:8px; }
+
+  .alert-row {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:18px; padding:13px 16px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:var(--shadow-sm);
+  }
+  .alert-icon-wrap {
+    width:38px; height:38px; border-radius:13px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .alert-icon-wrap svg { width:18px; height:18px; }
+
+  .alert-info { flex:1; min-width:0; }
+  .alert-name { font-size:14px; font-weight:700; color:var(--text); }
+  .alert-desc { font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'DM Mono', monospace; }
+
+  /* Toggle switch */
+  .toggle {
+    width:44px; height:26px; border-radius:13px;
+    position:relative; cursor:pointer; flex-shrink:0;
+    transition:background 0.25s;
+  }
+  .toggle.on  { background:var(--green); }
+  .toggle.off { background:var(--text-dim); }
+  .toggle-knob {
+    position:absolute; top:3px;
+    width:20px; height:20px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+    transition:left 0.25s;
+  }
+  .toggle.on  .toggle-knob { left:21px; }
+  .toggle.off .toggle-knob { left:3px; }
+
+  /* FAB */
+  .fab {
+    position:absolute; bottom:74px; left:50%; transform:translateX(-50%);
+    width:60px; height:60px; background:var(--green-deep);
+    border-radius:22px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:40;
+    box-shadow:0 6px 24px rgba(20,83,45,0.35), 0 0 0 4px rgba(34,197,94,0.12);
+  }
+  .fab svg { width:26px; height:26px; color:#fff; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position:absolute; bottom:0; left:0; right:0;
+    background:var(--white); border-top:1px solid var(--border);
+    padding:10px 8px 28px;
+    display:flex; justify-content:space-around; align-items:center;
+    z-index:30; box-shadow:0 -4px 16px rgba(0,0,0,0.04);
+  }
+  .nav-item {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:5px 14px; border-radius:14px; cursor:pointer;
+  }
+  .nav-item.active { background:var(--green-light); }
+  .nav-icon { width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .nav-icon svg { width:20px; height:20px; color:var(--text-muted); }
+  .nav-item.active .nav-icon svg { color:var(--green-dark); }
+  .nav-lbl  { font-size:10px; font-weight:600; color:var(--text-dim); }
+  .nav-item.active .nav-lbl { color:var(--green-dark); }
+  .nav-dot  { width:4px; height:4px; border-radius:50%; background:var(--green-mid); }
+  .nav-spacer { width:60px; }
+
+  /* ANIMATIONS */
+  @keyframes up { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  .header         { animation:up 0.35s ease both; }
+  .overview-strip { animation:up 0.35s 0.05s ease both; }
+  .limits         { animation:up 0.35s 0.1s ease both; }
+  .alerts         { animation:up 0.35s 0.15s ease both; }
+</style>
+</head>
+<body>
+<div class="phone">
+ <div class="screen">
+  <div class="island"></div>
+
+  <!-- Status -->
+  <div class="status">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="4" width="3" height="8" rx="1.5" fill="#111917"/>
+        <rect x="4.5" y="2.5" width="3" height="9.5" rx="1.5" fill="#111917"/>
+        <rect x="9" y="0.5" width="3" height="11.5" rx="1.5" fill="#22c55e"/>
+        <rect x="13.5" y="0.5" width="3" height="11.5" rx="1.5" fill="rgba(17,25,23,0.2)"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 2C10.5 2 12.7 3.1 14.2 4.8L15.5 3.5C13.6 1.4 11 0 8 0C5 0 2.4 1.4 0.5 3.5L1.8 4.8C3.3 3.1 5.5 2 8 2Z" fill="#111917"/>
+        <path d="M8 5C9.7 5 11.2 5.8 12.2 7L13.5 5.8C12.1 4.2 10.2 3.2 8 3.2C5.8 3.2 3.9 4.2 2.5 5.8L3.8 7C4.8 5.8 6.3 5 8 5Z" fill="#111917"/>
+        <circle cx="8" cy="10" r="1.8" fill="#22c55e"/>
+      </svg>
+      <svg width="28" height="13" viewBox="0 0 28 13" fill="none">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#111917" stroke-opacity="0.3"/>
+        <rect x="2" y="2" width="18" height="9" rx="2" fill="#111917"/>
+        <path d="M25 4.5V8.5C26 8.2 26.8 7.2 26.8 6.5C26.8 5.8 26 4.8 25 4.5Z" fill="#111917" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="page-title">Limits & Alerts</div>
+    <div class="add-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Monthly Overview — dynamic -->
+    <div class="overview-strip" id="overview-strip">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- Budget Limits -->
+    <div class="sec-hdr">
+      <div class="sec-title">Budget Limits</div>
+      <div class="sec-link">Edit all →</div>
+    </div>
+
+    <div class="limits">
+
+      <!-- FOOD — danger (over) -->
+      <div class="limit-card danger">
+        <div class="limit-top">
+          <div class="limit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </div>
+          <div class="limit-info">
+            <div class="limit-name">Food</div>
+            <div class="limit-sub">Monthly limit · R$1,000</div>
+          </div>
+          <div class="limit-right">
+            <div class="limit-pct">102%</div>
+            <div class="limit-remaining">R$20 over</div>
+          </div>
+        </div>
+        <div class="limit-track">
+          <div class="limit-fill fill-red" style="width:100%;"></div>
+        </div>
+        <div class="limit-bottom">
+          <div class="limit-amounts"><strong>R$1,020</strong> of R$1,000</div>
+          <div class="alert-badge badge-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Over limit
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSPORT — warning -->
+      <div class="limit-card warning">
+        <div class="limit-top">
+          <div class="limit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div class="limit-info">
+            <div class="limit-name">Transport</div>
+            <div class="limit-sub">Monthly limit · R$700</div>
+          </div>
+          <div class="limit-right">
+            <div class="limit-pct">83%</div>
+            <div class="limit-remaining">R$118 left</div>
+          </div>
+        </div>
+        <div class="limit-track">
+          <div class="limit-fill fill-yellow" style="width:83%;"></div>
+        </div>
+        <div class="limit-bottom">
+          <div class="limit-amounts"><strong>R$582</strong> of R$700</div>
+          <div class="alert-badge badge-yellow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+            Near limit
+          </div>
+        </div>
+      </div>
+
+      <!-- HOUSING — ok -->
+      <div class="limit-card">
+        <div class="limit-top">
+          <div class="limit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="limit-info">
+            <div class="limit-name">Housing</div>
+            <div class="limit-sub">Monthly limit · R$1,500</div>
+          </div>
+          <div class="limit-right">
+            <div class="limit-pct">80%</div>
+            <div class="limit-remaining">R$300 left</div>
+          </div>
+        </div>
+        <div class="limit-track">
+          <div class="limit-fill fill-green" style="width:80%;"></div>
+        </div>
+        <div class="limit-bottom">
+          <div class="limit-amounts"><strong>R$1,200</strong> of R$1,500</div>
+          <div class="alert-badge badge-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            On track
+          </div>
+        </div>
+      </div>
+
+      <!-- HEALTH — ok -->
+      <div class="limit-card">
+        <div class="limit-top">
+          <div class="limit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="limit-info">
+            <div class="limit-name">Health</div>
+            <div class="limit-sub">Monthly limit · R$500</div>
+          </div>
+          <div class="limit-right">
+            <div class="limit-pct">64%</div>
+            <div class="limit-remaining">R$180 left</div>
+          </div>
+        </div>
+        <div class="limit-track">
+          <div class="limit-fill fill-green" style="width:64%;"></div>
+        </div>
+        <div class="limit-bottom">
+          <div class="limit-amounts"><strong>R$320</strong> of R$500</div>
+          <div class="alert-badge badge-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            On track
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Notifications -->
+    <div class="sec-hdr" style="margin-top:16px;">
+      <div class="sec-title">Notifications</div>
+    </div>
+
+    <div class="alerts">
+
+      <div class="alert-row">
+        <div class="alert-icon-wrap" style="background:var(--green-light);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="alert-info">
+          <div class="alert-name">Budget warnings</div>
+          <div class="alert-desc">Alert at 80% of any limit</div>
+        </div>
+        <div class="toggle on" onclick="toggleSwitch(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="alert-icon-wrap" style="background:#fee2e2;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="alert-info">
+          <div class="alert-name">Over limit alerts</div>
+          <div class="alert-desc">Notify when limit is exceeded</div>
+        </div>
+        <div class="toggle on" onclick="toggleSwitch(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="alert-icon-wrap" style="background:#fef3c7;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="alert-info">
+          <div class="alert-name">Weekly summary</div>
+          <div class="alert-desc">Every Monday at 9:00 AM</div>
+        </div>
+        <div class="toggle on" onclick="toggleSwitch(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="alert-icon-wrap" style="background:var(--bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="alert-info">
+          <div class="alert-name">AI spending tips</div>
+          <div class="alert-desc">Smart suggestions from Wallot</div>
+        </div>
+        <div class="toggle off" onclick="toggleSwitch(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+      <div class="alert-row">
+        <div class="alert-icon-wrap" style="background:var(--bg);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="alert-info">
+          <div class="alert-name">Large transactions</div>
+          <div class="alert-desc">Alert for entries above R$500</div>
+        </div>
+        <div class="toggle off" onclick="toggleSwitch(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FAB -->
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="nav-lbl">Home</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <div class="nav-lbl">Entries</div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="nav-lbl">Insights</div>
+    </div>
+    <div class="nav-item active">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+      <div class="nav-lbl">Limits</div>
+      <div class="nav-dot"></div>
+    </div>
+  </div>
+
+ </div>
+</div>
+
+<script>
+  // Current state — change these to test different scenarios
+  const state = { onTrack: 3, warning: 1, overLimit: 1 };
+
+  function renderOverview() {
+    const strip = document.getElementById('overview-strip');
+    const allGood = state.warning === 0 && state.overLimit === 0;
+
+    if (allGood) {
+      strip.innerHTML = ''; // clear grid layout
+      strip.style.display = 'block';
+      strip.style.padding = '0';
+      strip.innerHTML = `
+        <div class="allclear-card">
+          <div class="allclear-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="allclear-title">All clear — great job! 🎉</div>
+            <div class="allclear-sub">All ${state.onTrack} budgets are on track this month</div>
+          </div>
+        </div>`;
+    } else {
+      strip.style.display = 'grid';
+      strip.style.padding = '4px 18px 18px';
+      let html = '';
+      // Always show on track
+      html += `<div class="ov-card">
+        <div class="ov-val" style="color:var(--green-mid);font-size:32px;margin-bottom:4px;">${state.onTrack}</div>
+        <div class="ov-label">On track</div>
+      </div>`;
+      // Only show warning if > 0
+      if (state.warning > 0) {
+        html += `<div class="ov-card">
+          <div class="ov-val" style="color:var(--yellow);font-size:32px;margin-bottom:4px;">${state.warning}</div>
+          <div class="ov-label">Warning</div>
+        </div>`;
+      }
+      // Only show over limit if > 0
+      if (state.overLimit > 0) {
+        html += `<div class="ov-card">
+          <div class="ov-val" style="color:var(--red);font-size:32px;margin-bottom:4px;">${state.overLimit}</div>
+          <div class="ov-label">Over limit</div>
+        </div>`;
+      }
+      strip.innerHTML = html;
+    }
+  }
+
+  function toggleSwitch(el) {
+    if (el.classList.contains('on')) {
+      el.classList.remove('on'); el.classList.add('off');
+    } else {
+      el.classList.remove('off'); el.classList.add('on');
+    }
+  }
+
+  // Demo: click the title to cycle between states
+  let demoMode = 0;
+  document.addEventListener('DOMContentLoaded', () => {
+    renderOverview();
+    document.querySelector('.page-title').style.cursor = 'pointer';
+    document.querySelector('.page-title').title = 'Click to preview states';
+    document.querySelector('.page-title').addEventListener('click', () => {
+      demoMode = (demoMode + 1) % 3;
+      if (demoMode === 0) { state.onTrack=3; state.warning=1; state.overLimit=1; }
+      if (demoMode === 1) { state.onTrack=4; state.warning=0; state.overLimit=0; }
+      if (demoMode === 2) { state.onTrack=2; state.warning=2; state.overLimit=0; }
+      renderOverview();
+    });
+  });
+</script>
+</body>
+</html>

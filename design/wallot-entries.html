@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallot — Entries</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:       #22c55e;
+    --green-deep:  #14532d;
+    --green-dark:  #166534;
+    --green-mid:   #16a34a;
+    --green-light: #dcfce7;
+    --green-soft:  #f0fdf4;
+    --white:       #ffffff;
+    --bg:          #f7f9f8;
+    --text:        #111917;
+    --text-mid:    #3d6b52;
+    --text-muted:  #7a9e8a;
+    --text-dim:    #b0caba;
+    --red:         #ef4444;
+    --border:      rgba(0,0,0,0.07);
+    --shadow-sm:   0 1px 4px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:#dde8e1;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh;
+    font-family:'Bricolage Grotesque', sans-serif;
+  }
+
+  .phone {
+    width:393px; height:852px;
+    background:var(--bg);
+    border-radius:52px;
+    border:10px solid #111;
+    box-shadow: 0 0 0 1.5px #2a2a2a, 0 50px 100px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.9);
+    position:relative; overflow:hidden;
+  }
+  .phone::before {
+    content:''; position:absolute; left:-13px; top:120px;
+    width:4px; height:32px; background:#111; border-radius:2px 0 0 2px;
+    box-shadow:0 44px 0 #111, 0 88px 0 #111;
+  }
+  .phone::after {
+    content:''; position:absolute; right:-13px; top:150px;
+    width:4px; height:60px; background:#111; border-radius:0 2px 2px 0;
+  }
+
+  .screen {
+    position:absolute; inset:0;
+    overflow-y:auto; overflow-x:hidden; scrollbar-width:none;
+  }
+  .screen::-webkit-scrollbar { display:none; }
+
+  .island {
+    width:120px; height:34px; background:#0a0a0a;
+    border-radius:20px; margin:14px auto 0; position:relative; z-index:10;
+  }
+
+  /* STATUS */
+  .status {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 28px 0;
+    font-family:'DM Mono', monospace;
+    font-size:12px; font-weight:500; color:var(--text);
+  }
+  .status-icons { display:flex; gap:6px; align-items:center; }
+
+  /* HEADER */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 22px 12px;
+  }
+  .page-title { font-size:24px; font-weight:800; color:var(--text); }
+
+  .icon-btn {
+    width:40px; height:40px; border-radius:14px;
+    background:var(--white); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:var(--shadow-sm);
+  }
+  .icon-btn svg { width:18px; height:18px; color:var(--text-mid); }
+
+  /* SEARCH */
+  .search-wrap { padding:0 18px 14px; }
+  .search-box {
+    display:flex; align-items:center; gap:10px;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:16px; padding:12px 16px;
+    box-shadow:var(--shadow-sm);
+  }
+  .search-box svg { width:17px; height:17px; color:var(--text-dim); flex-shrink:0; }
+  .search-box input {
+    border:none; outline:none; background:transparent;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size:14px; color:var(--text); width:100%;
+  }
+  .search-box input::placeholder { color:var(--text-dim); }
+
+  /* FILTER PILLS */
+  .filters {
+    display:flex; gap:8px;
+    padding:0 18px 16px;
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar { display:none; }
+
+  .filter-pill {
+    flex-shrink:0;
+    padding:7px 16px; border-radius:20px;
+    font-size:12px; font-weight:700;
+    cursor:pointer; border:1px solid var(--border);
+    background:var(--white); color:var(--text-muted);
+    transition:all 0.15s;
+    white-space:nowrap;
+  }
+  .filter-pill.active {
+    background:var(--green-deep); color:#fff;
+    border-color:var(--green-deep);
+  }
+
+  /* SUMMARY STRIP */
+  .summary {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:10px; padding:0 18px 20px;
+  }
+  .sum-card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:18px; padding:13px 16px;
+    box-shadow:var(--shadow-sm);
+    display:flex; align-items:center; gap:10px;
+  }
+  .sum-icon {
+    width:34px; height:34px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .sum-icon svg { width:16px; height:16px; }
+  .sum-lbl { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; }
+  .sum-val { font-size:16px; font-weight:800; font-family:'DM Mono', monospace; margin-top:1px; }
+
+  /* DATE GROUP */
+  .date-group { padding:0 18px; margin-bottom:6px; }
+  .date-label {
+    font-size:11px; font-weight:700; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.08em;
+    font-family:'DM Mono', monospace;
+    padding:0 0 8px;
+  }
+
+  /* ENTRY ROW */
+  .entries { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+
+  .entry {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:18px; padding:13px 14px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+    transition:box-shadow 0.2s;
+  }
+  .entry:hover { box-shadow:var(--shadow-md); }
+
+  .e-icon {
+    width:44px; height:44px; border-radius:15px;
+    background:var(--bg); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .e-icon svg { width:20px; height:20px; color:var(--text-mid); }
+
+  .e-info { flex:1; min-width:0; }
+  .e-name { font-size:14px; font-weight:700; color:var(--text); }
+  .e-meta { font-size:11px; color:var(--text-dim); margin-top:2px; font-family:'DM Mono', monospace; }
+  .ai-badge {
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:9px; font-weight:700;
+    background:var(--green-light); color:var(--green-dark);
+    border-radius:6px; padding:2px 7px;
+    text-transform:uppercase; letter-spacing:0.06em; margin-top:4px;
+  }
+
+  .e-right { text-align:right; flex-shrink:0; }
+  .e-amt  { font-size:15px; font-weight:800; font-family:'DM Mono', monospace; }
+  .e-cat  { font-size:10px; color:var(--text-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+  .neg { color:var(--red); }
+  .pos { color:var(--green-mid); }
+
+  /* spacer before bottom nav */
+  .bottom-spacer { height:100px; }
+
+  /* FAB */
+  .fab {
+    position:absolute; bottom:74px; left:50%; transform:translateX(-50%);
+    width:60px; height:60px; background:var(--green-deep);
+    border-radius:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:40;
+    box-shadow:0 6px 24px rgba(20,83,45,0.35), 0 0 0 4px rgba(34,197,94,0.12);
+  }
+  .fab svg { width:26px; height:26px; color:#fff; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position:absolute; bottom:0; left:0; right:0;
+    background:var(--white); border-top:1px solid var(--border);
+    padding:10px 8px 28px;
+    display:flex; justify-content:space-around; align-items:center;
+    z-index:30; box-shadow:0 -4px 16px rgba(0,0,0,0.04);
+  }
+  .nav-item {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:5px 14px; border-radius:14px; cursor:pointer;
+  }
+  .nav-item.active { background:var(--green-light); }
+  .nav-icon { width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .nav-icon svg { width:20px; height:20px; color:var(--text-muted); }
+  .nav-item.active .nav-icon svg { color:var(--green-dark); }
+  .nav-lbl  { font-size:10px; font-weight:600; color:var(--text-dim); }
+  .nav-item.active .nav-lbl { color:var(--green-dark); }
+  .nav-dot  { width:4px; height:4px; border-radius:50%; background:var(--green-mid); }
+  .nav-spacer { width:60px; }
+
+  /* ANIMATIONS */
+  @keyframes up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .header   { animation:up 0.35s ease both; }
+  .search-wrap { animation:up 0.35s 0.04s ease both; }
+  .filters  { animation:up 0.35s 0.08s ease both; }
+  .summary  { animation:up 0.35s 0.12s ease both; }
+  .date-group { animation:up 0.35s 0.16s ease both; }
+</style>
+</head>
+<body>
+<div class="phone">
+ <div class="screen">
+  <div class="island"></div>
+
+  <!-- Status -->
+  <div class="status">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="4" width="3" height="8" rx="1.5" fill="#111917"/>
+        <rect x="4.5" y="2.5" width="3" height="9.5" rx="1.5" fill="#111917"/>
+        <rect x="9" y="0.5" width="3" height="11.5" rx="1.5" fill="#22c55e"/>
+        <rect x="13.5" y="0.5" width="3" height="11.5" rx="1.5" fill="rgba(17,25,23,0.2)"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 2C10.5 2 12.7 3.1 14.2 4.8L15.5 3.5C13.6 1.4 11 0 8 0C5 0 2.4 1.4 0.5 3.5L1.8 4.8C3.3 3.1 5.5 2 8 2Z" fill="#111917"/>
+        <path d="M8 5C9.7 5 11.2 5.8 12.2 7L13.5 5.8C12.1 4.2 10.2 3.2 8 3.2C5.8 3.2 3.9 4.2 2.5 5.8L3.8 7C4.8 5.8 6.3 5 8 5Z" fill="#111917"/>
+        <circle cx="8" cy="10" r="1.8" fill="#22c55e"/>
+      </svg>
+      <svg width="28" height="13" viewBox="0 0 28 13" fill="none">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#111917" stroke-opacity="0.3"/>
+        <rect x="2" y="2" width="18" height="9" rx="2" fill="#111917"/>
+        <path d="M25 4.5V8.5C26 8.2 26.8 7.2 26.8 6.5C26.8 5.8 26 4.8 25 4.5Z" fill="#111917" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="page-title">Entries</div>
+    <div style="display:flex;gap:8px;">
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="11" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="13" y1="18" x2="20" y2="18"/></svg>
+      </div>
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search entries…" readonly/>
+    </div>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filters">
+    <div class="filter-pill active">All</div>
+    <div class="filter-pill">Expenses</div>
+    <div class="filter-pill">Income</div>
+    <div class="filter-pill">Food</div>
+    <div class="filter-pill">Transport</div>
+    <div class="filter-pill">Housing</div>
+    <div class="filter-pill">Health</div>
+  </div>
+
+  <!-- Monthly Summary -->
+  <div class="summary">
+    <div class="sum-card">
+      <div class="sum-icon" style="background:var(--green-light);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </div>
+      <div>
+        <div class="sum-lbl">Income</div>
+        <div class="sum-val" style="color:var(--green-mid);">R$8,200</div>
+      </div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-icon" style="background:#fef2f2;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      </div>
+      <div>
+        <div class="sum-lbl">Expenses</div>
+        <div class="sum-val" style="color:var(--red);">R$3,380</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODAY -->
+  <div class="date-group">
+    <div class="date-label">Today — Mar 25</div>
+    <div class="entries">
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Pizza Hut</div>
+          <div class="e-meta">16:32 · Food</div>
+          <div class="ai-badge">⚡ voice</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt neg">−R$87</div>
+          <div class="e-cat">expense</div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Freelance payment</div>
+          <div class="e-meta">10:15 · Income</div>
+          <div class="ai-badge">⚡ chat</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt pos">+R$2,400</div>
+          <div class="e-cat">income</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- YESTERDAY -->
+  <div class="date-group" style="margin-top:16px;">
+    <div class="date-label">Yesterday — Mar 24</div>
+    <div class="entries">
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Metro card top-up</div>
+          <div class="e-meta">09:40 · Transport</div>
+          <div class="ai-badge">📷 photo</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt neg">−R$50</div>
+          <div class="e-cat">expense</div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Gym subscription</div>
+          <div class="e-meta">08:00 · Health</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt neg">−R$120</div>
+          <div class="e-cat">expense</div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Rent</div>
+          <div class="e-meta">07:00 · Housing</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt neg">−R$1,200</div>
+          <div class="e-cat">expense</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAR 22 -->
+  <div class="date-group" style="margin-top:16px;">
+    <div class="date-label">Mar 22</div>
+    <div class="entries">
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Mercado Livre</div>
+          <div class="e-meta">14:22 · Shopping</div>
+          <div class="ai-badge">📷 photo</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt neg">−R$234</div>
+          <div class="e-cat">expense</div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="e-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="e-info">
+          <div class="e-name">Client invoice</div>
+          <div class="e-meta">11:00 · Income</div>
+          <div class="ai-badge">⚡ chat</div>
+        </div>
+        <div class="e-right">
+          <div class="e-amt pos">+R$5,800</div>
+          <div class="e-cat">income</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-spacer"></div>
+
+  <!-- FAB -->
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="nav-lbl">Home</div>
+    </div>
+    <div class="nav-item active">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </div>
+      <div class="nav-lbl">Entries</div>
+      <div class="nav-dot"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="nav-lbl">Ask AI</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div class="nav-lbl">Settings</div>
+    </div>
+  </div>
+
+ </div>
+</div>
+</body>
+</html>

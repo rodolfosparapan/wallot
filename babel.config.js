@@ -1,11 +1,6 @@
 module.exports = function (api) {
-  const platform = api.caller((caller) => caller?.platform);
-  api.cache.using(() => platform);
-  const isWeb = platform === 'web';
+  api.cache(true);
   return {
-    presets: [
-      ['babel-preset-expo', isWeb ? { reanimated: false, worklets: false } : {}],
-    ],
-    plugins: isWeb ? [] : ['react-native-worklets/plugin'],
+    presets: ['babel-preset-expo'],
   };
 };

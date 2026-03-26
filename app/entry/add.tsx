@@ -1,486 +1,635 @@
-import { useState, useRef } from 'react'
+import React, { useState } from 'react';
+
+const WAVEFORM_HEIGHTS = [8, 14, 6, 18, 10, 16, 4, 12, 20, 8, 15, 7, 19, 11, 5, 17, 9, 13, 6, 14];
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { Audio } from 'expo-av'
-import * as ImagePicker from 'expo-image-picker'
-import * as FileSystem from 'expo-file-system'
-import { format } from 'date-fns'
-import { useAuthStore, useEntriesStore } from '@/store'
-import { parseTextEntry, transcribeAudio, parseReceiptImage } from '@/lib/openai'
-import { Colors, FontSizes, Spacing, Radius, Categories } from '@/constants/theme'
-import { Button } from '@/components/ui'
-import type { EntryType, Category } from '@/types'
+  Alert,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  FlatList,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
+import { CategoryIcon, Badge } from '@/components/ui';
+import { mockAIMessages } from '@/data/mock';
+import { formatCurrency } from '@/hooks/useEntries';
+import { AIMessage, Category, EntryType } from '@/types';
 
-type Tab = 'manual' | 'ai'
-type AIMessage = { role: 'user' | 'assistant'; content: string; isLoading?: boolean }
+const categories: { key: Category; label: string }[] = [
+  { key: 'food', label: 'Food' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'housing', label: 'Housing' },
+  { key: 'health', label: 'Health' },
+  { key: 'shopping', label: 'Shopping' },
+  { key: 'entertainment', label: 'Entertainment' },
+  { key: 'education', label: 'Education' },
+  { key: 'other', label: 'Other' },
+];
 
-export default function AddEntry() {
-  const [tab, setTab] = useState<Tab>('ai')
-  const { user } = useAuthStore()
-  const { createEntry } = useEntriesStore()
+export default function AddEntryScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [activeTab, setActiveTab] = useState<'ai' | 'manual'>('ai');
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
-          <Text style={styles.closeText}>×</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.textMid} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Entry</Text>
-        <View style={{ width: 32 }} />
+        <Text style={styles.pageTitle}>Add Entry</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'manual' && styles.tabActive]}
-          onPress={() => setTab('manual')}
-        >
-          <Text style={[styles.tabText, tab === 'manual' && styles.tabTextActive]}>
-            Manual
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'ai' && styles.tabActive]}
-          onPress={() => setTab('ai')}
-        >
-          <Text style={[styles.tabText, tab === 'ai' && styles.tabTextActive]}>
-            AI — voice / photo
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {tab === 'manual' ? (
-        <ManualForm user={user} createEntry={createEntry} />
-      ) : (
-        <AIForm user={user} createEntry={createEntry} />
-      )}
-    </SafeAreaView>
-  )
-}
-
-// Manual Form
-function ManualForm({ user, createEntry }: any) {
-  const [type, setType] = useState<EntryType>('expense')
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<Category>('food')
-  const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const save = async () => {
-    const parsed = parseFloat(amount.replace(',', '.'))
-    if (!parsed || !description) {
-      Alert.alert('Missing fields', 'Please fill in amount and description.')
-      return
-    }
-    setLoading(true)
-    await createEntry({
-      user_id: user.id,
-      type,
-      amount: parsed,
-      category,
-      description,
-      date: new Date().toISOString(),
-      source: 'manual',
-    })
-    setLoading(false)
-    router.back()
-  }
-
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
-
-        {/* Type selector */}
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.typeRow}>
+      {/* Tab Switcher */}
+      <View style={styles.tabWrap}>
+        <View style={styles.tabBar}>
           <TouchableOpacity
-            style={[styles.typeBtn, type === 'expense' && styles.typeBtnExpActive]}
-            onPress={() => setType('expense')}
+            style={[styles.tab, activeTab === 'ai' && styles.tabActive]}
+            onPress={() => setActiveTab('ai')}
           >
-            <Text style={[styles.typeBtnText, type === 'expense' && { color: Colors.expense }]}>
-              Expense
+            <Ionicons
+              name="sparkles"
+              size={14}
+              color={activeTab === 'ai' ? colors.white : colors.textMuted}
+            />
+            <Text style={[styles.tabText, activeTab === 'ai' && styles.tabTextActive]}>
+              AI — Smart Entry
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.typeBtn, type === 'income' && styles.typeBtnIncActive]}
-            onPress={() => setType('income')}
+            style={[styles.tab, activeTab === 'manual' && styles.tabActive]}
+            onPress={() => setActiveTab('manual')}
           >
-            <Text style={[styles.typeBtnText, type === 'income' && { color: Colors.income }]}>
-              Income
+            <Ionicons
+              name="create"
+              size={14}
+              color={activeTab === 'manual' ? colors.white : colors.textMuted}
+            />
+            <Text style={[styles.tabText, activeTab === 'manual' && styles.tabTextActive]}>
+              Manual
             </Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Amount */}
-        <Text style={styles.label}>Amount</Text>
+      {activeTab === 'ai' ? <AITab /> : <ManualTab />}
+    </View>
+  );
+}
+
+// ── AI Tab ──
+function AITab() {
+  const [inputText, setInputText] = useState('');
+
+  const renderMessage = ({ item }: { item: AIMessage }) => {
+    const isUser = item.role === 'user';
+
+    return (
+      <View style={[styles.msgRow, isUser && styles.msgRowUser]}>
+        {!isUser && (
+          <View style={styles.botAvatar}>
+            <Ionicons name="sparkles" size={14} color={colors.white} />
+          </View>
+        )}
+        <View style={{ flex: 1, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+          {item.type === 'voice' && !isUser ? (
+            <View style={styles.voiceBubble}>
+              <Ionicons name="mic" size={16} color={colors.green} />
+              <View style={styles.waveform}>
+                {WAVEFORM_HEIGHTS.map((h, i) => (
+                  <View
+                    key={i}
+                    style={[styles.waveBar, { height: h }]}
+                  />
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.msgBubble, isUser && styles.msgBubbleUser]}>
+              <Text style={[styles.msgText, isUser && styles.msgTextUser]}>
+                {item.content}
+              </Text>
+            </View>
+          )}
+
+          {item.type === 'confirmation' && item.entryData && (
+            <View style={styles.confirmCard}>
+              <View style={styles.confirmHeader}>
+                <Ionicons name="checkmark-circle" size={16} color={colors.green} />
+                <Text style={styles.confirmTitle}>Entry logged</Text>
+              </View>
+              <View style={styles.confirmBody}>
+                <CategoryIcon category={item.entryData.category || 'other'} size={36} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.confirmDesc}>{item.entryData.description}</Text>
+                  <Text style={styles.confirmCat}>
+                    {(item.entryData.category || 'other').charAt(0).toUpperCase() +
+                      (item.entryData.category || 'other').slice(1)}
+                  </Text>
+                </View>
+                <Text style={styles.confirmAmount}>
+                  {formatCurrency(item.entryData.amount || 0)}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={mockAIMessages}
+        renderItem={renderMessage}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.chatArea}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Typing Indicator */}
+      <View style={styles.typingRow}>
+        <View style={styles.botAvatar}>
+          <Ionicons name="sparkles" size={14} color={colors.white} />
+        </View>
+        <View style={styles.typingBubble}>
+          <View style={[styles.typingDot, { animationDelay: '0s' }]} />
+          <View style={[styles.typingDot, { opacity: 0.6 }]} />
+          <View style={[styles.typingDot, { opacity: 0.3 }]} />
+        </View>
+      </View>
+
+      {/* Input Bar */}
+      <View style={styles.inputBar}>
+        <View style={styles.chatInputWrap}>
+          <TextInput
+            style={styles.chatInput}
+            placeholder="Type or speak..."
+            placeholderTextColor={colors.textDim}
+            value={inputText}
+            onChangeText={setInputText}
+          />
+        </View>
+        <TouchableOpacity style={styles.cameraBtn} onPress={() => Alert.alert('Coming soon', 'Photo input will be available soon.')}>
+          <Ionicons name="camera" size={20} color={colors.textMid} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.micBtn} onPress={() => Alert.alert('Coming soon', 'Voice input will be available soon.')}>
+          <Ionicons name="mic" size={22} color={colors.white} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ── Manual Tab ──
+function ManualTab() {
+  const [entryType, setEntryType] = useState<EntryType>('expense');
+  const [amount, setAmount] = useState('0');
+  const [selectedCategory, setSelectedCategory] = useState<Category>('food');
+  const [description, setDescription] = useState('');
+
+  return (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.manualContent}>
+      {/* Type Toggle */}
+      <View style={styles.typeToggle}>
+        <TouchableOpacity
+          style={[styles.typeBtn, entryType === 'expense' && styles.typeBtnActiveExp]}
+          onPress={() => setEntryType('expense')}
+        >
+          <Ionicons
+            name="arrow-up"
+            size={16}
+            color={entryType === 'expense' ? colors.white : colors.textMuted}
+          />
+          <Text
+            style={[styles.typeBtnText, entryType === 'expense' && styles.typeBtnTextActive]}
+          >
+            Expense
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.typeBtn, entryType === 'income' && styles.typeBtnActiveInc]}
+          onPress={() => setEntryType('income')}
+        >
+          <Ionicons
+            name="arrow-down"
+            size={16}
+            color={entryType === 'income' ? colors.white : colors.textMuted}
+          />
+          <Text
+            style={[styles.typeBtnText, entryType === 'income' && styles.typeBtnTextActive]}
+          >
+            Income
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Amount */}
+      <View style={styles.amountWrap}>
+        <Text style={styles.amountCurrency}>R$</Text>
         <TextInput
-          style={[styles.input, styles.amountInput]}
-          placeholder="R$ 0,00"
-          placeholderTextColor={Colors.textHint}
-          keyboardType="decimal-pad"
+          style={styles.amountInput}
           value={amount}
           onChangeText={setAmount}
+          keyboardType="decimal-pad"
+          placeholder="0"
+          placeholderTextColor={colors.textDim}
         />
+      </View>
 
-        {/* Category */}
-        <Text style={styles.label}>Category</Text>
-        <View style={styles.catGrid}>
-          {Categories.map((cat) => (
+      {/* Categories */}
+      <Text style={styles.catLabel}>Category</Text>
+      <View style={styles.catGrid}>
+        {categories.map((cat) => {
+          const info = categoryColors[cat.key] || categoryColors.other;
+          const isSelected = selectedCategory === cat.key;
+          return (
             <TouchableOpacity
-              key={cat.id}
-              style={[styles.catPill, category === cat.id && styles.catPillActive]}
-              onPress={() => setCategory(cat.id as Category)}
+              key={cat.key}
+              style={[
+                styles.catChip,
+                isSelected && { backgroundColor: info.color, borderColor: info.color },
+              ]}
+              onPress={() => setSelectedCategory(cat.key)}
             >
-              <Text style={[styles.catText, category === cat.id && styles.catTextActive]}>
-                {cat.icon} {cat.label}
+              <Ionicons
+                name={info.icon as any}
+                size={18}
+                color={isSelected ? colors.white : info.color}
+              />
+              <Text
+                style={[styles.catChipText, isSelected && { color: colors.white }]}
+              >
+                {cat.label}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Description */}
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Lunch at restaurant"
-          placeholderTextColor={Colors.textHint}
-          value={description}
-          onChangeText={setDescription}
-        />
-
-        {/* Date */}
-        <Text style={styles.label}>Date</Text>
-        <View style={[styles.input, styles.dateRow]}>
-          <Text style={{ color: Colors.textMuted }}>
-            {format(new Date(), 'dd/MM/yyyy — HH:mm')}
-          </Text>
-        </View>
-
-        <Button label="Save entry" onPress={save} loading={loading} style={styles.saveBtn} />
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </KeyboardAvoidingView>
-  )
-}
-
-// AI Form
-function AIForm({ user, createEntry }: any) {
-  const [messages, setMessages] = useState<AIMessage[]>([
-    {
-      role: 'assistant',
-      content: "Hey! Send a voice message, snap a photo or just type what you spent. I’ll take care of the rest! 🎤 📸",
-    },
-  ])
-  const [input, setInput] = useState('')
-  const [recording, setRecording] = useState<Audio.Recording | null>(null)
-  const [isRecording, setIsRecording] = useState(false)
-  const [aiLoading, setAiLoading] = useState(false)
-  const scrollRef = useRef<ScrollView>(null)
-
-  const addMsg = (msg: AIMessage) => {
-    setMessages((prev) => [...prev, msg])
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
-  }
-
-  const processEntry = async (text: string, source: 'text' | 'voice' | 'photo') => {
-    try {
-      const parsed = await parseTextEntry(text)
-      await createEntry({
-        user_id: user.id,
-        ...parsed,
-        date: new Date().toISOString(),
-        source,
-      })
-      return `Got it! Logged **${parsed.description}** — ${parsed.category} · R$${parsed.amount.toFixed(2)} ✓`
-    } catch {
-      return "Sorry, I couldn’t understand that. Please try again or use manual mode."
-    }
-  }
-
-  const sendText = async () => {
-    if (!input.trim() || aiLoading) return
-    const text = input.trim()
-    setInput('')
-    addMsg({ role: 'user', content: text })
-    setAiLoading(true)
-    const reply = await processEntry(text, 'text')
-    addMsg({ role: 'assistant', content: reply })
-    setAiLoading(false)
-  }
-
-  const startRecording = async () => {
-    try {
-      await Audio.requestPermissionsAsync()
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true })
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      )
-      setRecording(recording)
-      setIsRecording(true)
-    } catch {
-      Alert.alert('Error', 'Could not start recording.')
-    }
-  }
-
-  const stopRecording = async () => {
-    if (!recording) return
-    setIsRecording(false)
-    await recording.stopAndUnloadAsync()
-    const uri = recording.getURI()
-    setRecording(null)
-    if (!uri) return
-
-    addMsg({ role: 'user', content: '🎤 Voice message sent' })
-    setAiLoading(true)
-    try {
-      const transcript = await transcribeAudio(uri)
-      const reply = await processEntry(transcript, 'voice')
-      addMsg({ role: 'assistant', content: reply })
-    } catch {
-      addMsg({ role: 'assistant', content: "Couldn’t process the audio. Try again!" })
-    }
-    setAiLoading(false)
-  }
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-      base64: true,
-    })
-    if (result.canceled || !result.assets[0]) return
-
-    addMsg({ role: 'user', content: '📸 Receipt photo sent' })
-    setAiLoading(true)
-    try {
-      const base64 = result.assets[0].base64 ?? ''
-      const parsed = await parseReceiptImage(base64)
-      await createEntry({
-        user_id: user.id,
-        ...parsed,
-        date: new Date().toISOString(),
-        source: 'photo',
-      })
-      addMsg({
-        role: 'assistant',
-        content: `Receipt scanned! Logged **${parsed.description}** — ${parsed.category} · R$${parsed.amount.toFixed(2)} ✓`,
-      })
-    } catch {
-      addMsg({ role: 'assistant', content: "Couldn’t read the receipt. Try a clearer photo!" })
-    }
-    setAiLoading(false)
-  }
-
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      {/* Messages */}
-      <ScrollView
-        ref={scrollRef}
-        style={styles.chatScroll}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      >
-        {messages.map((msg, i) => (
-          <View
-            key={i}
-            style={[
-              styles.bubble,
-              msg.role === 'user' ? styles.bubbleUser : styles.bubbleAI,
-            ]}
-          >
-            {msg.role === 'assistant' && (
-              <Text style={styles.bubbleTag}>WALLOT</Text>
-            )}
-            <Text style={[styles.bubbleText, msg.role === 'user' && { color: '#fff' }]}>
-              {msg.content}
-            </Text>
-          </View>
-        ))}
-        {aiLoading && (
-          <View style={[styles.bubble, styles.bubbleAI]}>
-            <Text style={styles.bubbleTag}>WALLOT</Text>
-            <ActivityIndicator color={Colors.primary} size="small" />
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Input row */}
-      <View style={styles.aiInputRow}>
-        <TextInput
-          style={styles.aiInput}
-          placeholder="Type an entry..."
-          placeholderTextColor={Colors.textHint}
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={sendText}
-          returnKeyType="send"
-        />
-        <TouchableOpacity
-          style={[styles.aiBtn, isRecording && { backgroundColor: Colors.expense }]}
-          onPress={isRecording ? stopRecording : startRecording}
-        >
-          <Text style={{ fontSize: 16 }}>{isRecording ? '■' : '🎤'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.aiBtn} onPress={pickImage}>
-          <Text style={{ fontSize: 16 }}>📸</Text>
-        </TouchableOpacity>
-        {input.length > 0 && (
-          <TouchableOpacity style={[styles.aiBtn, { backgroundColor: Colors.primary }]} onPress={sendText}>
-            <Text style={{ fontSize: 14, color: Colors.bg, fontWeight: '700' }}>↑</Text>
-          </TouchableOpacity>
-        )}
+          );
+        })}
       </View>
-    </KeyboardAvoidingView>
-  )
+
+      {/* Description */}
+      <TextInput
+        style={styles.descInput}
+        placeholder="Add a description..."
+        placeholderTextColor={colors.textDim}
+        value={description}
+        onChangeText={setDescription}
+      />
+
+      {/* Save */}
+      <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8}>
+        <Ionicons name="checkmark" size={20} color={colors.white} />
+        <Text style={styles.saveBtnText}>Save Entry</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
   },
-  closeBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  closeText: { color: Colors.textMuted, fontSize: FontSizes.lg },
-  headerTitle: { fontSize: FontSizes.lg, fontWeight: '700', color: Colors.textPrimary },
-  tabRow: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm,
+  },
+  pageTitle: {
+    fontSize: typography.lg,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  tabWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 14,
+  },
+  tabBar: {
     flexDirection: 'row',
-    margin: Spacing.lg,
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.sm,
-    padding: 3,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm,
   },
   tab: {
     flex: 1,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    borderRadius: Radius.sm - 2,
-  },
-  tabActive: { backgroundColor: Colors.primary },
-  tabText: { fontSize: FontSizes.sm, color: Colors.textHint, fontWeight: '600' },
-  tabTextActive: { color: Colors.bg },
-  form: { paddingHorizontal: Spacing.lg },
-  label: {
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
-    marginBottom: Spacing.xs,
-    marginTop: Spacing.md,
-  },
-  input: {
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    height: 48,
-    color: Colors.textPrimary,
-    fontSize: FontSizes.md,
-  },
-  amountInput: {
-    fontSize: FontSizes.xl,
-    fontWeight: '700',
-    height: 56,
-  },
-  dateRow: {
-    justifyContent: 'center',
-  },
-  typeRow: { flexDirection: 'row', gap: Spacing.sm },
-  typeBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  typeBtnExpActive: { borderColor: Colors.expense, backgroundColor: '#1f0a0a' },
-  typeBtnIncActive: { borderColor: Colors.income, backgroundColor: '#0a1f0e' },
-  typeBtnText: { fontSize: FontSizes.sm, fontWeight: '600', color: Colors.textHint },
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs },
-  catPill: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.bgCard,
-  },
-  catPillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  catText: { fontSize: FontSizes.sm, color: Colors.textMuted },
-  catTextActive: { color: Colors.bg, fontWeight: '700' },
-  saveBtn: { marginTop: Spacing.xl },
-  chatScroll: { flex: 1, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md },
-  bubble: {
-    maxWidth: '85%',
-    borderRadius: 14,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  bubbleAI: {
-    backgroundColor: Colors.bgElevated,
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  bubbleUser: {
-    backgroundColor: '#1a3a20',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  bubbleTag: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: Colors.primary,
-    marginBottom: 3,
-    letterSpacing: 1,
-  },
-  bubbleText: { fontSize: FontSizes.sm, color: Colors.textSecondary, lineHeight: 20 },
-  aiInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.bg,
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: radius.base,
   },
-  aiInput: {
-    flex: 1,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.md,
-    height: 42,
-    color: Colors.textPrimary,
-    fontSize: FontSizes.sm,
+  tabActive: {
+    backgroundColor: colors.greenDeep,
   },
-  aiBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.bgCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  tabText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  tabTextActive: {
+    color: colors.white,
+  },
+
+  // AI Tab
+  chatArea: {
+    padding: spacing.lg,
+    gap: 16,
+  },
+  msgRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-end',
+  },
+  msgRowUser: {
+    flexDirection: 'row-reverse',
+  },
+  botAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 11,
+    backgroundColor: colors.greenDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
+  msgBubble: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    maxWidth: '80%',
+    ...shadows.sm,
+  },
+  msgBubbleUser: {
+    backgroundColor: colors.greenDeep,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 4,
+  },
+  msgText: {
+    fontSize: typography.base,
+    color: colors.text,
+    lineHeight: 20,
+  },
+  msgTextUser: {
+    color: colors.white,
+  },
+  voiceBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    ...shadows.sm,
+  },
+  waveform: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  waveBar: {
+    width: 3,
+    backgroundColor: colors.green,
+    borderRadius: 2,
+  },
+  confirmCard: {
+    backgroundColor: colors.greenSoft,
+    borderRadius: radius.base,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.greenLight,
+  },
+  confirmHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  confirmTitle: {
+    fontSize: typography.sm,
+    fontWeight: '700',
+    color: colors.green,
+  },
+  confirmBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  confirmDesc: {
+    fontSize: typography.base,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  confirmCat: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  confirmAmount: {
+    fontSize: typography.md,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  typingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 8,
+  },
+  typingBubble: {
+    flexDirection: 'row',
+    gap: 4,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    ...shadows.sm,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.textDim,
+  },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  chatInputWrap: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    borderRadius: radius.base,
+    paddingHorizontal: 14,
+    height: 44,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chatInput: {
+    fontSize: typography.base,
+    color: colors.text,
+  },
+  cameraBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.green,
+  },
+
+  // Manual Tab
+  manualContent: {
+    padding: spacing.lg,
+    gap: 20,
+  },
+  typeToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm,
+  },
+  typeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: radius.base,
+  },
+  typeBtnActiveExp: {
+    backgroundColor: colors.red,
+  },
+  typeBtnActiveInc: {
+    backgroundColor: colors.green,
+  },
+  typeBtnText: {
+    fontSize: typography.base,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  typeBtnTextActive: {
+    color: colors.white,
+  },
+  amountWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 20,
+  },
+  amountCurrency: {
+    fontSize: typography.xl,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  amountInput: {
+    fontSize: 48,
+    fontWeight: '800',
+    color: colors.text,
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  catLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  catGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  catChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: colors.white,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  catChipText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
+  },
+  descInput: {
+    backgroundColor: colors.white,
+    borderRadius: radius.base,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontSize: typography.base,
+    color: colors.text,
+  },
+  saveBtn: {
+    backgroundColor: colors.green,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: radius.base,
+    ...shadows.green,
+  },
+  saveBtnText: {
+    color: colors.white,
+    fontSize: typography.md,
+    fontWeight: '700',
+  },
+});

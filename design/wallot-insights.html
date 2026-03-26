@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallot — Insights</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:       #22c55e;
+    --green-deep:  #14532d;
+    --green-dark:  #166534;
+    --green-mid:   #16a34a;
+    --green-light: #dcfce7;
+    --green-soft:  #f0fdf4;
+    --white:       #ffffff;
+    --bg:          #f7f9f8;
+    --text:        #111917;
+    --text-mid:    #3d6b52;
+    --text-muted:  #7a9e8a;
+    --text-dim:    #b0caba;
+    --red:         #ef4444;
+    --red-soft:    #fef2f2;
+    --yellow:      #f59e0b;
+    --yellow-soft: #fefce8;
+    --border:      rgba(0,0,0,0.07);
+    --shadow-sm:   0 1px 4px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.08);
+    --shadow-green:0 8px 32px rgba(20,83,45,0.28);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:#dde8e1;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh;
+    font-family:'Bricolage Grotesque', sans-serif;
+  }
+
+  .phone {
+    width:393px; height:852px;
+    background:var(--bg);
+    border-radius:52px;
+    border:10px solid #111;
+    box-shadow:0 0 0 1.5px #2a2a2a, 0 50px 100px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.9);
+    position:relative; overflow:hidden;
+  }
+  .phone::before {
+    content:''; position:absolute; left:-13px; top:120px;
+    width:4px; height:32px; background:#111; border-radius:2px 0 0 2px;
+    box-shadow:0 44px 0 #111, 0 88px 0 #111;
+  }
+  .phone::after {
+    content:''; position:absolute; right:-13px; top:150px;
+    width:4px; height:60px; background:#111; border-radius:0 2px 2px 0;
+  }
+
+  .screen {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  .island {
+    width:120px; height:34px; background:#0a0a0a;
+    border-radius:20px; margin:14px auto 0; flex-shrink:0; z-index:10;
+  }
+
+  /* STATUS */
+  .status {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 28px 0; flex-shrink:0;
+    font-family:'DM Mono', monospace; font-size:12px; font-weight:500; color:var(--text);
+  }
+  .status-icons { display:flex; gap:6px; align-items:center; }
+
+  /* HEADER */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px 10px; flex-shrink:0;
+  }
+  .page-title { font-size:24px; font-weight:800; color:var(--text); }
+  .month-pill {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:20px; padding:7px 14px;
+    font-size:12px; font-weight:700; color:var(--text-mid);
+    display:flex; align-items:center; gap:6px;
+    box-shadow:var(--shadow-sm); cursor:pointer;
+  }
+  .month-pill svg { width:13px; height:13px; color:var(--text-dim); }
+
+  /* SCROLLABLE CONTENT */
+  .content {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    scrollbar-width:none; padding-bottom:100px;
+  }
+  .content::-webkit-scrollbar { display:none; }
+
+  /* ── HEALTH SCORE CARD ── */
+  .health-card {
+    margin:4px 18px 14px;
+    background:linear-gradient(150deg, var(--green-deep) 0%, #1a5e35 55%, #0f3d22 100%);
+    border-radius:28px; padding:20px 22px;
+    position:relative; overflow:hidden;
+    box-shadow:var(--shadow-green);
+  }
+  .health-card::before {
+    content:''; position:absolute; top:-50px; right:-40px;
+    width:180px; height:180px;
+    background:radial-gradient(circle, rgba(74,222,128,0.2) 0%, transparent 65%);
+    pointer-events:none;
+  }
+  .health-top {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:14px; position:relative; z-index:1;
+  }
+  .health-label {
+    font-size:11px; color:rgba(187,247,208,0.55);
+    text-transform:uppercase; letter-spacing:0.08em;
+    font-family:'DM Mono', monospace;
+  }
+  .health-badge {
+    background:rgba(74,222,128,0.2); border:1px solid rgba(74,222,128,0.3);
+    border-radius:20px; padding:4px 12px;
+    font-size:11px; font-weight:700; color:#4ade80;
+    font-family:'DM Mono', monospace;
+  }
+  .health-score-row {
+    display:flex; align-items:flex-end; gap:12px;
+    margin-bottom:16px; position:relative; z-index:1;
+  }
+  .health-score {
+    font-size:56px; font-weight:800; color:#fff;
+    letter-spacing:-3px; line-height:1;
+  }
+  .health-score-sub { padding-bottom:8px; }
+  .health-score-label { font-size:12px; color:rgba(187,247,208,0.6); font-weight:500; }
+  .health-score-change {
+    font-size:13px; font-weight:700; color:#4ade80;
+    display:flex; align-items:center; gap:3px;
+    font-family:'DM Mono', monospace;
+  }
+  .health-score-change svg { width:13px; height:13px; }
+
+  /* Score bar */
+  .score-track {
+    height:6px; background:rgba(255,255,255,0.1);
+    border-radius:3px; overflow:hidden;
+    position:relative; z-index:1;
+  }
+  .score-fill {
+    height:100%; border-radius:3px;
+    background:linear-gradient(to right, #4ade80, #22c55e);
+    width:72%;
+    transition:width 1s ease;
+  }
+  .score-ticks {
+    display:flex; justify-content:space-between;
+    margin-top:5px; position:relative; z-index:1;
+  }
+  .score-tick { font-size:9px; color:rgba(187,247,208,0.35); font-family:'DM Mono', monospace; }
+
+  /* ── SPARKLINE ROW ── */
+  .trend-card {
+    margin:0 18px 14px;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:22px; padding:16px 18px;
+    box-shadow:var(--shadow-sm);
+  }
+  .trend-top {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+  }
+  .trend-title { font-size:14px; font-weight:800; color:var(--text); }
+  .trend-tabs  { display:flex; gap:4px; }
+  .trend-tab {
+    padding:4px 10px; border-radius:10px; font-size:11px; font-weight:700;
+    cursor:pointer; color:var(--text-dim); transition:all 0.15s;
+  }
+  .trend-tab.active { background:var(--green-light); color:var(--green-dark); }
+
+  .sparkline-wrap { position:relative; height:64px; }
+  svg.sparkline { width:100%; height:64px; overflow:visible; }
+
+  .trend-footer {
+    display:flex; gap:16px; margin-top:10px;
+  }
+  .trend-stat { display:flex; align-items:center; gap:6px; }
+  .trend-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .trend-stat-label { font-size:11px; color:var(--text-muted); font-weight:600; }
+  .trend-stat-val   { font-size:13px; font-weight:800; font-family:'DM Mono', monospace; color:var(--text); margin-left:2px; }
+
+  /* ── INSIGHT CARDS (horizontal scroll) ── */
+  .insights-label {
+    padding:0 22px 10px;
+    font-size:17px; font-weight:800; color:var(--text);
+  }
+  .insights-scroll {
+    display:flex; gap:10px;
+    padding:0 18px 16px;
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .insights-scroll::-webkit-scrollbar { display:none; }
+
+  .insight-chip {
+    flex-shrink:0; width:185px;
+    border-radius:20px; padding:14px 16px;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-sm);
+    cursor:pointer;
+  }
+  .insight-chip-icon {
+    width:34px; height:34px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:10px;
+  }
+  .insight-chip-icon svg { width:17px; height:17px; }
+  .insight-chip-title { font-size:13px; font-weight:800; color:var(--text); margin-bottom:3px; line-height:1.3; }
+  .insight-chip-sub   { font-size:11px; color:var(--text-muted); line-height:1.4; }
+  .insight-chip-val   { font-size:16px; font-weight:800; font-family:'DM Mono', monospace; margin-top:8px; }
+
+  /* chip variants */
+  .chip-green { background:var(--green-soft); border-color:rgba(34,197,94,0.15); }
+  .chip-green .insight-chip-icon { background:var(--green-light); }
+  .chip-green .insight-chip-icon svg { color:var(--green-dark); }
+  .chip-green .insight-chip-val { color:var(--green-mid); }
+
+  .chip-red { background:var(--red-soft); border-color:rgba(239,68,68,0.12); }
+  .chip-red .insight-chip-icon { background:#fee2e2; }
+  .chip-red .insight-chip-icon svg { color:var(--red); }
+  .chip-red .insight-chip-val { color:var(--red); }
+
+  .chip-yellow { background:var(--yellow-soft); border-color:rgba(245,158,11,0.15); }
+  .chip-yellow .insight-chip-icon { background:#fef3c7; }
+  .chip-yellow .insight-chip-icon svg { color:var(--yellow); }
+  .chip-yellow .insight-chip-val { color:var(--yellow); }
+
+  .chip-neutral { background:var(--white); }
+  .chip-neutral .insight-chip-icon { background:var(--bg); }
+  .chip-neutral .insight-chip-icon svg { color:var(--text-mid); }
+  .chip-neutral .insight-chip-val { color:var(--text); }
+
+  /* ── CATEGORY BREAKDOWN ── */
+  .breakdown-card {
+    margin:0 18px 14px;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:22px; padding:16px 18px;
+    box-shadow:var(--shadow-sm);
+  }
+  .breakdown-title { font-size:14px; font-weight:800; color:var(--text); margin-bottom:14px; }
+  .breakdown-row {
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  }
+  .breakdown-row:last-child { margin-bottom:0; }
+  .breakdown-icon {
+    width:34px; height:34px; border-radius:11px;
+    background:var(--bg); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .breakdown-icon svg { width:16px; height:16px; color:var(--text-mid); }
+  .breakdown-info { flex:1; min-width:0; }
+  .breakdown-name  { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .breakdown-track { height:5px; background:var(--bg); border-radius:3px; overflow:hidden; }
+  .breakdown-fill  { height:100%; border-radius:3px; background:var(--green); }
+  .breakdown-right { text-align:right; flex-shrink:0; }
+  .breakdown-amt   { font-size:13px; font-weight:800; font-family:'DM Mono', monospace; color:var(--text); }
+  .breakdown-pct   { font-size:10px; color:var(--text-dim); margin-top:1px; }
+
+  /* ── AI INPUT AREA (top, prominent) ── */
+  .ai-input-area {
+    margin:0 18px 16px;
+    flex-shrink:0;
+  }
+
+  .ai-input-card {
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:22px; padding:14px 16px;
+    box-shadow:var(--shadow-sm);
+    position:relative; overflow:hidden;
+  }
+
+  .ai-input-label {
+    display:flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:700; color:var(--green-mid);
+    text-transform:uppercase; letter-spacing:0.08em;
+    margin-bottom:10px;
+  }
+  .ai-input-label svg { width:13px; height:13px; color:var(--green); }
+
+  .ai-input-row { display:flex; gap:8px; align-items:center; }
+  .ai-input-field {
+    flex:1; background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:16px; padding:12px 16px;
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size:14px; color:var(--text-muted);
+    cursor:pointer; transition:all 0.2s;
+  }
+  .ai-input-field:hover {
+    border-color:rgba(34,197,94,0.3);
+    color:var(--text);
+  }
+
+  .ai-send-btn {
+    width:46px; height:46px; border-radius:15px;
+    background:var(--green-deep);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+    box-shadow:0 3px 14px rgba(20,83,45,0.25);
+    transition:transform 0.15s;
+  }
+  .ai-send-btn:hover { transform:scale(1.05); }
+  .ai-send-btn svg { width:18px; height:18px; color:#fff; }
+
+  /* AI answer — drops below the card */
+  .ai-answer {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:0 0 18px 18px;
+    border-top:none;
+    padding:12px 16px 14px;
+    margin-top:-6px;
+    box-shadow:var(--shadow-md);
+    display:none;
+    animation:popDown 0.22s ease both;
+  }
+  @keyframes popDown { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
+  .ai-answer-header {
+    display:flex; align-items:center; gap:7px; margin-bottom:6px;
+  }
+  .ai-answer-dot {
+    width:22px; height:22px; border-radius:8px; background:var(--green-deep);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .ai-answer-dot svg { width:11px; height:11px; color:#fff; }
+  .ai-answer-label { font-size:10px; font-weight:800; color:var(--green-mid); text-transform:uppercase; letter-spacing:0.07em; }
+  .ai-answer-text  { font-size:13px; color:var(--text); line-height:1.5; font-weight:500; }
+  .ai-answer-close {
+    width:22px; height:22px; border-radius:7px; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; margin-left:auto;
+  }
+  .ai-answer-close svg { width:12px; height:12px; color:var(--text-dim); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position:absolute; bottom:0; left:0; right:0;
+    background:var(--white); border-top:1px solid var(--border);
+    padding:10px 8px 28px;
+    display:flex; justify-content:space-around; align-items:center;
+    z-index:30; box-shadow:0 -4px 16px rgba(0,0,0,0.04);
+  }
+  .nav-item {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:5px 14px; border-radius:14px; cursor:pointer;
+  }
+  .nav-item.active { background:var(--green-light); }
+  .nav-icon { width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .nav-icon svg { width:20px; height:20px; color:var(--text-muted); }
+  .nav-item.active .nav-icon svg { color:var(--green-dark); }
+  .nav-lbl  { font-size:10px; font-weight:600; color:var(--text-dim); }
+  .nav-item.active .nav-lbl { color:var(--green-dark); }
+  .nav-dot  { width:4px; height:4px; border-radius:50%; background:var(--green-mid); }
+  .nav-spacer { width:60px; }
+
+  /* FAB */
+  .fab {
+    position:absolute; bottom:74px; left:50%; transform:translateX(-50%);
+    width:60px; height:60px; background:var(--green-deep);
+    border-radius:22px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:40;
+    box-shadow:0 6px 24px rgba(20,83,45,0.35), 0 0 0 4px rgba(34,197,94,0.12);
+  }
+  .fab svg { width:26px; height:26px; color:#fff; }
+
+  /* ANIMATIONS */
+  @keyframes up { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  .header        { animation:up 0.35s ease both; }
+  .health-card   { animation:up 0.38s 0.04s ease both; }
+  .trend-card    { animation:up 0.38s 0.08s ease both; }
+  .insights-label{ animation:up 0.35s 0.12s ease both; }
+  .insights-scroll{ animation:up 0.35s 0.14s ease both; }
+  .breakdown-card{ animation:up 0.35s 0.18s ease both; }
+</style>
+</head>
+<body>
+<div class="phone">
+ <div class="screen">
+  <div class="island"></div>
+
+  <!-- Status -->
+  <div class="status">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="4" width="3" height="8" rx="1.5" fill="#111917"/>
+        <rect x="4.5" y="2.5" width="3" height="9.5" rx="1.5" fill="#111917"/>
+        <rect x="9" y="0.5" width="3" height="11.5" rx="1.5" fill="#22c55e"/>
+        <rect x="13.5" y="0.5" width="3" height="11.5" rx="1.5" fill="rgba(17,25,23,0.2)"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 2C10.5 2 12.7 3.1 14.2 4.8L15.5 3.5C13.6 1.4 11 0 8 0C5 0 2.4 1.4 0.5 3.5L1.8 4.8C3.3 3.1 5.5 2 8 2Z" fill="#111917"/>
+        <path d="M8 5C9.7 5 11.2 5.8 12.2 7L13.5 5.8C12.1 4.2 10.2 3.2 8 3.2C5.8 3.2 3.9 4.2 2.5 5.8L3.8 7C4.8 5.8 6.3 5 8 5Z" fill="#111917"/>
+        <circle cx="8" cy="10" r="1.8" fill="#22c55e"/>
+      </svg>
+      <svg width="28" height="13" viewBox="0 0 28 13" fill="none">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#111917" stroke-opacity="0.3"/>
+        <rect x="2" y="2" width="18" height="9" rx="2" fill="#111917"/>
+        <path d="M25 4.5V8.5C26 8.2 26.8 7.2 26.8 6.5C26.8 5.8 26 4.8 25 4.5Z" fill="#111917" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="page-title">Insights</div>
+    <div class="month-pill">
+      Mar 2025
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <!-- AI ASK CARD — prominent, top of screen -->
+  <div class="ai-input-area">
+    <div class="ai-input-card">
+      <div class="ai-input-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Ask Wallot AI
+      </div>
+      <div class="ai-input-row">
+        <div class="ai-input-field" id="ai-field" onclick="askWallot()">What did I spend most on this month?</div>
+        <div class="ai-send-btn" onclick="askWallot()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="ai-answer" id="ai-answer">
+      <div class="ai-answer-header">
+        <div class="ai-answer-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="ai-answer-label">Wallot AI</div>
+        <div class="ai-answer-close" onclick="closeAnswer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </div>
+      </div>
+      <div class="ai-answer-text" id="ai-answer-text"></div>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div class="content">
+
+    <!-- Health Score Card -->
+    <div class="health-card">
+      <div class="health-top">
+        <div class="health-label">Financial Health</div>
+        <div class="health-badge">Good ↑</div>
+      </div>
+      <div class="health-score-row">
+        <div class="health-score">72</div>
+        <div class="health-score-sub">
+          <div class="health-score-label">out of 100</div>
+          <div class="health-score-change">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            +8 vs Feb
+          </div>
+        </div>
+      </div>
+      <div class="score-track">
+        <div class="score-fill"></div>
+      </div>
+      <div class="score-ticks">
+        <span class="score-tick">Poor</span>
+        <span class="score-tick">Fair</span>
+        <span class="score-tick">Good</span>
+        <span class="score-tick">Great</span>
+      </div>
+    </div>
+
+    <!-- Spending Trend -->
+    <div class="trend-card">
+      <div class="trend-top">
+        <div class="trend-title">Spending Trend</div>
+        <div class="trend-tabs">
+          <div class="trend-tab active">3M</div>
+          <div class="trend-tab">6M</div>
+          <div class="trend-tab">1Y</div>
+        </div>
+      </div>
+
+      <div class="sparkline-wrap">
+        <svg class="sparkline" viewBox="0 0 320 64" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#22c55e" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#16a34a"/>
+            </linearGradient>
+          </defs>
+          <!-- Jan line (muted) -->
+          <polyline points="0,44 26,38 53,42 80,30 106,36 133,28" fill="none" stroke="#b0caba" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round"/>
+          <!-- Feb line (muted) -->
+          <polyline points="0,36 26,32 53,38 80,26 106,30 133,20 160,24" fill="none" stroke="#b0caba" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round"/>
+          <!-- March area -->
+          <polygon points="0,40 40,34 80,38 120,22 160,28 200,18 240,24 280,14 320,18 320,64 0,64" fill="url(#areaGrad)"/>
+          <!-- March line -->
+          <polyline points="0,40 40,34 80,38 120,22 160,28 200,18 240,24 280,14 320,18" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- Current point -->
+          <circle cx="320" cy="18" r="4" fill="#22c55e"/>
+          <circle cx="320" cy="18" r="7" fill="#22c55e" opacity="0.2"/>
+        </svg>
+      </div>
+
+      <div class="trend-footer">
+        <div class="trend-stat">
+          <div class="trend-dot" style="background:var(--green);"></div>
+          <div class="trend-stat-label">March</div>
+          <div class="trend-stat-val">R$3,380</div>
+        </div>
+        <div class="trend-stat">
+          <div class="trend-dot" style="background:var(--text-dim);"></div>
+          <div class="trend-stat-label">February</div>
+          <div class="trend-stat-val">R$2,910</div>
+        </div>
+        <div class="trend-stat">
+          <div class="trend-dot" style="background:var(--text-dim);"></div>
+          <div class="trend-stat-label">January</div>
+          <div class="trend-stat-val">R$3,120</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Smart Insight Cards -->
+    <div class="insights-label">Smart Insights</div>
+    <div class="insights-scroll">
+
+      <div class="insight-chip chip-red">
+        <div class="insight-chip-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="insight-chip-title">Food budget almost full</div>
+        <div class="insight-chip-sub">R$980 of R$1,100 used — 6 days left</div>
+        <div class="insight-chip-val">89%</div>
+      </div>
+
+      <div class="insight-chip chip-green">
+        <div class="insight-chip-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </div>
+        <div class="insight-chip-title">Best savings month</div>
+        <div class="insight-chip-sub">You saved more than any month this year</div>
+        <div class="insight-chip-val">R$4,820</div>
+      </div>
+
+      <div class="insight-chip chip-yellow">
+        <div class="insight-chip-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="insight-chip-title">Weekend spending up</div>
+        <div class="insight-chip-sub">+R$230 more on Sat & Sun vs Feb</div>
+        <div class="insight-chip-val">+28%</div>
+      </div>
+
+      <div class="insight-chip chip-neutral">
+        <div class="insight-chip-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="insight-chip-title">3 active subscriptions</div>
+        <div class="insight-chip-sub">Netflix, Spotify, iCloud</div>
+        <div class="insight-chip-val">R$89/mo</div>
+      </div>
+
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="breakdown-card">
+      <div class="breakdown-title">Category Breakdown</div>
+
+      <div class="breakdown-row">
+        <div class="breakdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="breakdown-info">
+          <div class="breakdown-name">Housing</div>
+          <div class="breakdown-track"><div class="breakdown-fill" style="width:88%; background:#22c55e;"></div></div>
+        </div>
+        <div class="breakdown-right">
+          <div class="breakdown-amt">R$1,200</div>
+          <div class="breakdown-pct">35%</div>
+        </div>
+      </div>
+
+      <div class="breakdown-row">
+        <div class="breakdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+        <div class="breakdown-info">
+          <div class="breakdown-name">Food</div>
+          <div class="breakdown-track"><div class="breakdown-fill" style="width:66%; background:#4ade80;"></div></div>
+        </div>
+        <div class="breakdown-right">
+          <div class="breakdown-amt">R$980</div>
+          <div class="breakdown-pct">29%</div>
+        </div>
+      </div>
+
+      <div class="breakdown-row">
+        <div class="breakdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div class="breakdown-info">
+          <div class="breakdown-name">Transport</div>
+          <div class="breakdown-track"><div class="breakdown-fill" style="width:42%; background:#86efac;"></div></div>
+        </div>
+        <div class="breakdown-right">
+          <div class="breakdown-amt">R$640</div>
+          <div class="breakdown-pct">19%</div>
+        </div>
+      </div>
+
+      <div class="breakdown-row">
+        <div class="breakdown-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div class="breakdown-info">
+          <div class="breakdown-name">Health</div>
+          <div class="breakdown-track"><div class="breakdown-fill" style="width:22%; background:#bbf7d0;"></div></div>
+        </div>
+        <div class="breakdown-right">
+          <div class="breakdown-amt">R$320</div>
+          <div class="breakdown-pct">9%</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="nav-lbl">Home</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <div class="nav-lbl">Entries</div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-item active">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="nav-lbl">Insights</div>
+      <div class="nav-dot"></div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div class="nav-lbl">Settings</div>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </div>
+
+ </div>
+</div>
+
+<script>
+  const answers = [
+    "In March you spent <strong>R$3,380</strong> — your biggest month was January at R$3,120. You're on track! 📊",
+    "Your food spending this month is <strong>R$980</strong>, which is 29% of total expenses. That's slightly above the recommended 25%. 🍔",
+    "March was <strong>R$470 higher</strong> than February. The main drivers were Food (+R$230) and weekend outings (+R$140). 📅",
+    "You're close on Food — <strong>89% used</strong> with 6 days to go. All other categories are within budget. ✅",
+    "3 quick wins: cook 2 weekend meals at home (~R$120 saved), review your 3 subscriptions (R$89/mo), and cap transport at R$600 next month. 💡",
+    "Your savings rate this month is <strong>58.8%</strong> — that's excellent! The average Brazilian saves only 5-10% of income. 🎉",
+    "Your highest single expense was <strong>Rent at R$1,200</strong> on Mar 24. Second highest was a client dinner at R$280. 📋",
+  ];
+
+  let answerIdx = 0;
+
+  function askWallot() {
+    const field  = document.getElementById('ai-field');
+    const answer = document.getElementById('ai-answer');
+    const text   = document.getElementById('ai-answer-text');
+
+    field.textContent = 'Thinking…';
+    field.style.color = 'var(--text-dim)';
+    answer.style.display = 'none';
+
+    setTimeout(() => {
+      text.innerHTML = answers[answerIdx % answers.length];
+      answerIdx++;
+      answer.style.display = 'block';
+      field.textContent = 'Ask anything about your finances…';
+    }, 900);
+  }
+
+  function closeAnswer() {
+    document.getElementById('ai-answer').style.display = 'none';
+  }
+</script>
+</body>
+</html>

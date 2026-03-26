@@ -1,175 +1,488 @@
-import React from 'react'
+import React from 'react';
 import {
-  View,
-  Text,
   TouchableOpacity,
-  ActivityIndicator,
+  Text,
+  View,
   StyleSheet,
+  ActivityIndicator,
+  Switch,
   ViewStyle,
   TextStyle,
-} from 'react-native'
-import { Colors, Radius, Spacing, FontSizes } from '@/constants/theme'
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, radius, shadows, spacing, typography, categoryColors } from '@/constants/theme';
 
-// ── Button ────────────────────────────────────────────────────────────────────
+// ── Button ──
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+
 interface ButtonProps {
-  label: string
-  onPress: () => void
-  variant?: 'primary' | 'ghost' | 'danger'
-  loading?: boolean
-  disabled?: boolean
-  style?: ViewStyle
+  title: string;
+  onPress?: () => void;
+  variant?: ButtonVariant;
+  loading?: boolean;
+  disabled?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+  fullWidth?: boolean;
 }
 
 export function Button({
-  label,
+  title,
   onPress,
   variant = 'primary',
   loading,
   disabled,
+  icon,
   style,
+  textStyle,
+  fullWidth,
 }: ButtonProps) {
-  const bg =
-    variant === 'primary'
-      ? Colors.primary
-      : variant === 'danger'
-      ? '#7f1d1d'
-      : 'transparent'
-
-  const textColor =
-    variant === 'primary'
-      ? Colors.bg
-      : variant === 'danger'
-      ? Colors.expense
-      : Colors.textMuted
-
-  const borderColor =
-    variant === 'ghost' ? Colors.border : 'transparent'
+  const variantStyles = {
+    primary: { bg: colors.greenDeep, text: colors.white },
+    secondary: { bg: colors.white, text: colors.text },
+    ghost: { bg: 'transparent', text: colors.textMid },
+    danger: { bg: colors.redLight, text: colors.red },
+  };
+  const v = variantStyles[variant];
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
+      activeOpacity={0.7}
       style={[
         styles.button,
-        { backgroundColor: bg, borderColor, borderWidth: variant === 'ghost' ? 1 : 0, opacity: disabled ? 0.5 : 1 },
+        { backgroundColor: v.bg },
+        variant === 'secondary' && { borderWidth: 1, borderColor: colors.border },
+        fullWidth && { width: '100%' },
+        disabled && { opacity: 0.5 },
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={textColor} size="small" />
+        <ActivityIndicator color={v.text} size="small" />
       ) : (
-        <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
+        <View style={styles.buttonInner}>
+          {icon && <Ionicons name={icon} size={18} color={v.text} style={{ marginRight: 6 }} />}
+          <Text style={[styles.buttonText, { color: v.text }, textStyle]}>{title}</Text>
+        </View>
       )}
     </TouchableOpacity>
-  )
+  );
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
+// ── Card ──
 interface CardProps {
-  children: React.ReactNode
-  style?: ViewStyle
-  elevated?: boolean
+  children: React.ReactNode;
+  style?: ViewStyle;
+  elevated?: boolean;
 }
 
 export function Card({ children, style, elevated }: CardProps) {
   return (
-    <View
-      style={[
-        styles.card,
-        elevated && { backgroundColor: Colors.bgElevated, borderColor: Colors.borderStrong },
-        style,
-      ]}
-    >
+    <View style={[styles.card, elevated && shadows.md, style]}>
       {children}
     </View>
-  )
+  );
 }
 
-// ── Badge ─────────────────────────────────────────────────────────────────────
+// ── Badge ──
 interface BadgeProps {
-  label: string
-  color?: string
-  textColor?: string
+  label: string;
+  color?: string;
+  bgColor?: string;
+  size?: 'sm' | 'md';
 }
 
-export function Badge({ label, color = Colors.bgCard, textColor = Colors.textMuted }: BadgeProps) {
+export function Badge({ label, color = colors.green, bgColor, size = 'sm' }: BadgeProps) {
   return (
-    <View style={[styles.badge, { backgroundColor: color }]}>
-      <Text style={[styles.badgeText, { color: textColor }]}>{label}</Text>
+    <View
+      style={[
+        styles.badge,
+        {
+          backgroundColor: bgColor || `${color}18`,
+          paddingHorizontal: size === 'sm' ? 8 : 10,
+          paddingVertical: size === 'sm' ? 3 : 5,
+        },
+      ]}
+    >
+      <Text style={[styles.badgeText, { color, fontSize: size === 'sm' ? 10 : 12 }]}>
+        {label}
+      </Text>
     </View>
-  )
+  );
 }
 
-// ── Amount display ────────────────────────────────────────────────────────────
+// ── Amount ──
 interface AmountProps {
-  value: number
-  type?: 'income' | 'expense' | 'neutral'
-  size?: 'sm' | 'md' | 'lg'
+  value: number;
+  type?: 'income' | 'expense' | 'neutral';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  currency?: string;
 }
 
-export function Amount({ value, type = 'neutral', size = 'md' }: AmountProps) {
-  const color =
-    type === 'income' ? Colors.income : type === 'expense' ? Colors.expense : Colors.textPrimary
-  const fontSize = size === 'sm' ? FontSizes.sm : size === 'lg' ? FontSizes.xxl : FontSizes.lg
-  const prefix = type === 'income' ? '+' : type === 'expense' ? '-' : ''
+export function Amount({ value, type = 'neutral', size = 'md', currency = 'BRL' }: AmountProps) {
+  const colorMap = {
+    income: colors.green,
+    expense: colors.red,
+    neutral: colors.text,
+  };
+  const sizeMap = { sm: 13, md: 16, lg: 22, xl: 32 };
+  const formatted = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency,
+  }).format(value);
 
   return (
-    <Text style={{ color, fontSize, fontWeight: '700' }}>
-      {prefix}R$ {Math.abs(value).toFixed(2)}
+    <Text
+      style={{
+        color: colorMap[type],
+        fontSize: sizeMap[size],
+        fontWeight: '700',
+      }}
+    >
+      {type === 'expense' ? `- ${formatted}` : type === 'income' ? `+ ${formatted}` : formatted}
     </Text>
-  )
+  );
 }
 
-// ── Section title ─────────────────────────────────────────────────────────────
-export function SectionTitle({ title, style }: { title: string; style?: TextStyle }) {
+// ── SectionTitle ──
+interface SectionTitleProps {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+}
+
+export function SectionTitle({ title, action, onAction }: SectionTitleProps) {
   return (
-    <Text style={[styles.sectionTitle, style]}>{title.toUpperCase()}</Text>
-  )
+    <View style={styles.sectionTitleRow}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {action && (
+        <TouchableOpacity onPress={onAction}>
+          <Text style={styles.sectionAction}>{action}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 }
 
-// ── Divider ───────────────────────────────────────────────────────────────────
+// ── Divider ──
 export function Divider({ style }: { style?: ViewStyle }) {
-  return <View style={[styles.divider, style]} />
+  return <View style={[styles.divider, style]} />;
+}
+
+// ── CategoryIcon ──
+interface CategoryIconProps {
+  category: string;
+  size?: number;
+  monochrome?: boolean;
+}
+
+export function CategoryIcon({ category, size = 40, monochrome = false }: CategoryIconProps) {
+  const cat = categoryColors[category] || categoryColors.other;
+  const iconSize = size * 0.5;
+
+  return (
+    <View
+      style={[
+        styles.categoryIcon,
+        {
+          width: size,
+          height: size,
+          borderRadius: size * 0.35,
+          backgroundColor: monochrome ? colors.bg : cat.bg,
+          borderWidth: monochrome ? 1 : 0,
+          borderColor: monochrome ? colors.border : undefined,
+        },
+      ]}
+    >
+      <Ionicons
+        name={cat.icon as any}
+        size={iconSize}
+        color={monochrome ? colors.textMid : cat.color}
+      />
+    </View>
+  );
+}
+
+// ── ProgressBar ──
+interface ProgressBarProps {
+  progress: number; // 0-1
+  color?: string;
+  height?: number;
+  style?: ViewStyle;
+}
+
+export function ProgressBar({
+  progress,
+  color = colors.green,
+  height = 6,
+  style,
+}: ProgressBarProps) {
+  return (
+    <View style={[styles.progressTrack, { height, borderRadius: height / 2 }, style]}>
+      <View
+        style={[
+          styles.progressFill,
+          {
+            width: `${Math.min(progress * 100, 100)}%`,
+            backgroundColor: color,
+            height,
+            borderRadius: height / 2,
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
+// ── FilterPill ──
+interface FilterPillProps {
+  label: string;
+  active?: boolean;
+  onPress?: () => void;
+}
+
+export function FilterPill({ label, active, onPress }: FilterPillProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={[styles.filterPill, active && styles.filterPillActive]}
+    >
+      <Text style={[styles.filterPillText, active && styles.filterPillTextActive]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ── Toggle Row ──
+interface ToggleRowProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  iconBg?: string;
+  label: string;
+  description?: string;
+  value: boolean;
+  onValueChange?: (val: boolean) => void;
+}
+
+export function ToggleRow({
+  icon,
+  iconColor = colors.green,
+  iconBg = colors.greenLight,
+  label,
+  description,
+  value,
+  onValueChange,
+}: ToggleRowProps) {
+  return (
+    <View style={styles.toggleRow}>
+      <View style={[styles.toggleIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.toggleLabel}>{label}</Text>
+        {description && <Text style={styles.toggleDesc}>{description}</Text>}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: '#e5e7eb', true: colors.greenLight }}
+        thumbColor={value ? colors.green : '#f4f4f5'}
+      />
+    </View>
+  );
+}
+
+// ── Settings Row ──
+interface SettingsRowProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  iconBg?: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  danger?: boolean;
+}
+
+export function SettingsRow({
+  icon,
+  iconColor = colors.textMid,
+  iconBg = colors.greenSoft,
+  label,
+  value,
+  onPress,
+  danger,
+}: SettingsRowProps) {
+  return (
+    <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={0.6}>
+      <View style={[styles.toggleIcon, { backgroundColor: danger ? colors.redLight : iconBg }]}>
+        <Ionicons name={icon} size={18} color={danger ? colors.red : iconColor} />
+      </View>
+      <Text style={[styles.settingsLabel, danger && { color: colors.red }]}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {value && (
+          <View style={styles.settingsValue}>
+            <Text style={styles.settingsValueText}>{value}</Text>
+          </View>
+        )}
+        <Ionicons name="chevron-forward" size={16} color={colors.textDim} />
+      </View>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
+  // Button
   button: {
-    height: 48,
-    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: radius.base,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
+    ...shadows.sm,
+  },
+  buttonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   buttonText: {
-    fontSize: FontSizes.md,
+    fontSize: typography.base,
     fontWeight: '700',
   },
+
+  // Card
   card: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.lg,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.base,
     borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
+    borderColor: colors.border,
   },
+
+  // Badge
   badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
+    borderRadius: radius.full,
+    alignSelf: 'flex-start',
   },
   badgeText: {
-    fontSize: FontSizes.xs,
     fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // SectionTitle
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: Colors.textHint,
-    letterSpacing: 1.2,
-    marginBottom: Spacing.sm,
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
+  sectionAction: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.green,
+  },
+
+  // Divider
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Spacing.sm,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
   },
-})
+
+  // CategoryIcon
+  categoryIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ProgressBar
+  progressTrack: {
+    backgroundColor: colors.greenSoft,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  progressFill: {},
+
+  // FilterPill
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: 8,
+  },
+  filterPillActive: {
+    backgroundColor: colors.greenDeep,
+    borderColor: colors.greenDeep,
+  },
+  filterPillText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
+  },
+  filterPillTextActive: {
+    color: colors.white,
+  },
+
+  // Toggle
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  toggleIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleLabel: {
+    fontSize: typography.base,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  toggleDesc: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+
+  // Settings Row
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+  },
+  settingsLabel: {
+    flex: 1,
+    fontSize: typography.base,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  settingsValue: {
+    backgroundColor: colors.greenSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
+  settingsValueText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.greenMid,
+  },
+});

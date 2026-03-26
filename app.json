@@ -4,54 +4,28 @@
     "slug": "wallot",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/app-icons/icon-1024.svg",
+    "icon": "./assets/icon.png",
     "scheme": "wallot",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash/splash-portrait.svg",
-      "resizeMode": "contain",
-      "backgroundColor": "#041208"
+      "backgroundColor": "#14532d",
+      "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.wallot.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Wallot uses your camera to scan receipts.",
-        "NSMicrophoneUsageDescription": "Wallot uses your microphone to record voice entries.",
-        "NSPhotoLibraryUsageDescription": "Wallot accesses your photos to import receipts."
-      }
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wallot.app"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icons/icon-192.svg",
-        "backgroundColor": "#041208"
+        "backgroundColor": "#14532d"
       },
-      "package": "com.wallot.app",
-      "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "READ_EXTERNAL_STORAGE"
-      ]
+      "package": "com.wallot.app"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/app-icons/favicon-32.svg"
+      "output": "static"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      [
-        "expo-camera",
-        { "cameraPermission": "Wallot uses your camera to scan receipts." }
-      ],
-      [
-        "expo-av",
-        { "microphonePermission": "Wallot uses your microphone for voice entries." }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    "plugins": ["expo-router"]
   }
 }

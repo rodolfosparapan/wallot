@@ -1,107 +1,113 @@
-import { Tabs, router } from 'expo-router'
-import { TouchableOpacity, View, StyleSheet } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import { Colors } from '@/constants/theme'
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, shadows } from '@/constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function AddButton() {
+function TabBarIcon({ name, label, focused }: { name: keyof typeof Ionicons.glyphMap; label: string; focused: boolean }) {
   return (
-    <TouchableOpacity
-      onPress={() => router.push('/entry/add')}
-      style={styles.addBtn}
-    >
-      <View style={styles.addInner}>
-        <View style={styles.plus} />
-        <View style={styles.plusH} />
-      </View>
-    </TouchableOpacity>
-  )
+    <View style={styles.tabIconWrap}>
+      <Ionicons name={name} size={22} color={focused ? colors.greenDark : colors.textMuted} />
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+      {focused && <View style={styles.activeDot} />}
+    </View>
+  );
 }
 
-export default function TabLayout() {
+export default function TabsLayout() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#020a04',
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          overflow: 'visible',
-        },
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: '#4ade80',
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarShowLabel: false,
+        tabBarStyle: [
+          styles.tabBar,
+          { paddingBottom: Math.max(insets.bottom, 8) },
+        ],
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="home" label="Home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="entries"
         options={{
-          title: 'Entries',
-          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="list" label="Entries" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
-          title: '',
-          tabBarButton: () => <AddButton />,
+          tabBarButton: () => (
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => router.push('/entry/add')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={28} color={colors.white} />
+            </TouchableOpacity>
+          ),
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
-          title: 'Insights',
-          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="sparkles" label="Ask AI" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="settings" label="Settings" focused={focused} />,
         }}
       />
     </Tabs>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  addBtn: {
-    top: -16,
+  tabBar: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    height: Platform.OS === 'ios' ? 88 : 64,
+    paddingTop: 8,
+    ...shadows.sm,
+  },
+  tabIconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textDim,
+  },
+  tabLabelActive: {
+    color: colors.greenDark,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.greenMid,
+  },
+  fab: {
     width: 56,
     height: 56,
-  },
-  addInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    backgroundColor: colors.greenDeep,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: -20,
+    ...shadows.green,
   },
-  plus: {
-    position: 'absolute',
-    width: 20,
-    height: 2.5,
-    borderRadius: 2,
-    backgroundColor: Colors.bg,
-  },
-  plusH: {
-    position: 'absolute',
-    width: 2.5,
-    height: 20,
-    borderRadius: 2,
-    backgroundColor: Colors.bg,
-  },
-})
+});

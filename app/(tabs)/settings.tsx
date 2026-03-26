@@ -1,233 +1,261 @@
-import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useAuthStore, useBudgetStore } from '@/store'
-import { Colors, FontSizes, Spacing, Radius } from '@/constants/theme'
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { Card, SettingsRow, ToggleRow, Divider, Button } from '@/components/ui';
+import { mockUser } from '@/data/mock';
 
-export default function Settings() {
-  const { user, signOut } = useAuthStore()
-  const { alerts, updateAlert } = useBudgetStore()
-
-  const initials = user?.full_name
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) ?? 'WL'
+export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [darkMode, setDarkMode] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(true);
+  const [editProfileVisible, setEditProfileVisible] = useState(false);
+  const [incomeGoalVisible, setIncomeGoalVisible] = useState(false);
+  const [fullName, setFullName] = useState(mockUser.full_name);
+  const [email, setEmail] = useState(mockUser.email);
+  const [incomeGoal, setIncomeGoal] = useState('8000');
 
   const handleSignOut = () => {
-    Alert.alert('Sign out', 'Are you sure?', [
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: signOut },
-    ])
-  }
+      { text: 'Sign out', style: 'destructive', onPress: () => router.replace('/auth/login') },
+    ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert('Delete account', 'This action cannot be undone. All your data will be permanently deleted.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => router.replace('/auth/login') },
+    ]);
+  };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Settings</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Settings</Text>
+      </View>
 
-        {/* Profile card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.userName}>{user?.full_name ?? 'Wallot User'}</Text>
-            <Text style={styles.userEmail}>{user?.email}</Text>
-          </View>
-          <View style={styles.proBadge}>
-            <Text style={styles.proBadgeText}>Free</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Profile Card */}
+        <View style={styles.section}>
+          <View style={styles.profileCard}>
+            <View style={styles.profileAvatar}>
+              <Ionicons name="person" size={28} color="rgba(255,255,255,0.9)" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.profileName}>{fullName}</Text>
+              <Text style={styles.profileEmail}>{email}</Text>
+            </View>
+            <TouchableOpacity style={styles.editBtn} onPress={() => setEditProfileVisible(true)}>
+              <Ionicons name="pencil" size={16} color={colors.white} />
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Preferences */}
-        <SettingsSection title="Preferences">
-          <SettingsRow label="Language" value="Portuguese" onPress={() => {}} />
-          <SettingsRow label="Currency" value="BRL R$" onPress={() => {}} />
-          <SettingsRow label="Theme" value="Dark" onPress={() => {}} />
-        </SettingsSection>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Preferences</Text>
+          <Card>
+            <SettingsRow icon="language" label="Language" value="PT-BR" onPress={() => router.push('/settings/language')} />
+            <Divider />
+            <SettingsRow icon="cash" label="Currency" value="R$ BRL" onPress={() => router.push('/settings/currency')} />
+            <Divider />
+            <SettingsRow icon="calendar" label="Month start" value="Day 1" onPress={() => Alert.alert('Coming soon', 'Month start setting will be available soon.')} />
+            <Divider />
+            <ToggleRow icon="moon" label="Dark mode" value={darkMode} onValueChange={setDarkMode} />
+          </Card>
+        </View>
 
         {/* Finance */}
-        <SettingsSection title="Finance">
-          <SettingsRow
-            label="Limits & Alerts"
-            onPress={() => router.push('/tabs/limits')}
-            arrow
-          />
-          <SettingsRow
-            label="Categories"
-            onPress={() => {}}
-            arrow
-          />
-          <SettingsRow
-            label="Connected accounts"
-            value="Coming soon"
-            onPress={() => {}}
-          />
-        </SettingsSection>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Finance</Text>
+          <Card>
+            <SettingsRow icon="grid" label="Default categories" onPress={() => router.push('/settings/categories')} />
+            <Divider />
+            <SettingsRow icon="trending-up" label="Monthly income goal" value="R$8,000" onPress={() => setIncomeGoalVisible(true)} />
+            <Divider />
+            <SettingsRow icon="download" label="Export data" value="CSV/PDF" onPress={() => Alert.alert('Coming soon', 'Data export will be available soon.')} />
+            <Divider />
+            <SettingsRow icon="alert-circle" iconColor={colors.yellow} label="Limits & Alerts" onPress={() => router.push('/limits')} />
+          </Card>
+        </View>
 
-        {/* Notifications */}
-        <SettingsSection title="Notifications">
-          {alerts.map((alert) => (
-            <View key={alert.id} style={styles.alertRow}>
-              <Text style={styles.alertLabel}>{formatAlertLabel(alert.type)}</Text>
-              <Switch
-                value={alert.enabled}
-                onValueChange={(val) => updateAlert(alert.id, val)}
-                trackColor={{ false: Colors.border, true: Colors.primary }}
-                thumbColor="#fff"
-              />
-            </View>
-          ))}
-          {alerts.length === 0 && (
-            <Text style={styles.emptyAlerts}>No alerts configured yet.</Text>
-          )}
-        </SettingsSection>
+        {/* AI & Privacy */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>AI & Privacy</Text>
+          <Card>
+            <ToggleRow icon="sparkles" iconColor={colors.green} iconBg={colors.greenLight} label="AI suggestions" value={aiSuggestions} onValueChange={setAiSuggestions} />
+            <Divider />
+            <SettingsRow icon="shield-checkmark" label="Data & privacy policy" onPress={() => Alert.alert('Privacy policy', 'Your data is stored securely and never sold to third parties.')} />
+          </Card>
+        </View>
 
         {/* Account */}
-        <SettingsSection title="Account">
-          <SettingsRow label="Privacy & data" onPress={() => {}} arrow />
-          <SettingsRow label="Help & support" onPress={() => {}} arrow />
-          <SettingsRow label="About Wallot" value="v1.0.0" onPress={() => {}} />
-        </SettingsSection>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Account</Text>
+          <Card>
+            <SettingsRow icon="key" label="Change password" onPress={() => router.push('/settings/change-password')} />
+            <Divider />
+            <SettingsRow icon="log-out" label="Sign out" danger onPress={handleSignOut} />
+            <Divider />
+            <SettingsRow icon="trash" label="Delete account" danger onPress={handleDeleteAccount} />
+          </Card>
+        </View>
 
-        {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 80 }} />
+        <Text style={styles.footer}>Wallot v1.0.0 · Made with ♥ in Brazil</Text>
       </ScrollView>
-    </SafeAreaView>
-  )
-}
 
-function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title.toUpperCase()}</Text>
-      <View style={styles.sectionCard}>{children}</View>
+      {/* Edit Profile Modal */}
+      <Modal visible={editProfileVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Full name</Text>
+              <TextInput style={styles.modalInput} value={fullName} onChangeText={setFullName} />
+            </View>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Email</Text>
+              <TextInput style={styles.modalInput} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+            </View>
+            <View style={styles.modalActions}>
+              <Button title="Cancel" variant="secondary" onPress={() => setEditProfileVisible(false)} style={{ flex: 1 }} />
+              <Button title="Save" onPress={() => setEditProfileVisible(false)} style={{ flex: 1 }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Income Goal Modal */}
+      <Modal visible={incomeGoalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Monthly Income Goal</Text>
+            <View style={styles.modalField}>
+              <Text style={styles.modalLabel}>Amount (R$)</Text>
+              <TextInput style={styles.modalInput} value={incomeGoal} onChangeText={setIncomeGoal} keyboardType="decimal-pad" />
+            </View>
+            <View style={styles.modalActions}>
+              <Button title="Cancel" variant="secondary" onPress={() => setIncomeGoalVisible(false)} style={{ flex: 1 }} />
+              <Button title="Save" onPress={() => setIncomeGoalVisible(false)} style={{ flex: 1 }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
-  )
-}
-
-function SettingsRow({
-  label, value, onPress, arrow,
-}: {
-  label: string; value?: string; onPress: () => void; arrow?: boolean
-}) {
-  return (
-    <TouchableOpacity style={styles.row} onPress={onPress}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.rowRight}>
-        {value && <Text style={styles.rowValue}>{value}</Text>}
-        {arrow && <Text style={styles.rowArrow}>›</Text>}
-      </View>
-    </TouchableOpacity>
-  )
-}
-
-function formatAlertLabel(type: string): string {
-  const labels: Record<string, string> = {
-    daily_limit: 'Daily spending over limit',
-    category_limit: 'Category limit at 80%',
-    weekly_summary: 'Weekly AI summary',
-    monthly_report: 'Monthly report',
-  }
-  return labels[type] ?? type
+  );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
-  title: {
-    fontSize: FontSizes.xxl,
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
+  },
+  pageTitle: {
+    fontSize: typography.xl,
     fontWeight: '800',
-    color: Colors.textPrimary,
-    letterSpacing: -0.5,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    marginBottom: Spacing.lg,
+    color: colors.text,
+  },
+  section: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
   },
   profileCard: {
+    backgroundColor: colors.greenDeep,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    marginHorizontal: Spacing.lg,
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    marginBottom: Spacing.lg,
+    gap: 14,
+    ...shadows.green,
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primary,
+  profileAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  profileName: {
+    fontSize: typography.lg,
+    fontWeight: '800',
+    color: colors.white,
+  },
+  profileEmail: {
+    fontSize: typography.sm,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  editBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: FontSizes.md, fontWeight: '800', color: Colors.bg },
-  userName: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary },
-  userEmail: { fontSize: FontSizes.xs, color: Colors.textHint, marginTop: 2 },
-  proBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    backgroundColor: Colors.bgMid,
-    borderRadius: Radius.full,
+  footer: {
+    textAlign: 'center',
+    fontSize: typography.sm,
+    color: colors.textDim,
+    paddingVertical: 20,
   },
-  proBadgeText: { fontSize: FontSizes.xs, color: Colors.primary, fontWeight: '600' },
-  section: { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg },
-  sectionTitle: {
-    fontSize: 10,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    padding: spacing.xl,
+    gap: spacing.lg,
+  },
+  modalTitle: {
+    fontSize: typography.lg,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  modalField: {
+    gap: spacing.sm,
+  },
+  modalLabel: {
+    fontSize: typography.sm,
     fontWeight: '600',
-    color: Colors.textHint,
-    letterSpacing: 1.2,
-    marginBottom: Spacing.sm,
+    color: colors.textMuted,
   },
-  sectionCard: {
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.lg,
+  modalInput: {
+    backgroundColor: colors.bg,
+    borderRadius: radius.base,
     borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  rowLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary },
-  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rowValue: { fontSize: FontSizes.sm, color: Colors.textHint },
-  rowArrow: { fontSize: FontSizes.lg, color: Colors.border },
-  alertRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  alertLabel: { fontSize: FontSizes.sm, color: Colors.textSecondary, flex: 1 },
-  emptyAlerts: { padding: Spacing.md, color: Colors.textHint, fontSize: FontSizes.sm },
-  signOutBtn: {
-    marginHorizontal: Spacing.lg,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.base,
     height: 48,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: '#7f1d1d',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: typography.base,
+    color: colors.text,
   },
-  signOutText: { color: Colors.expense, fontSize: FontSizes.md, fontWeight: '600' },
-})
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+});

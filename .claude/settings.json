@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/git/wallot show main:constants/theme.ts)",
+      "Bash(git -C /c/git/wallot show main:types/index.ts)",
+      "Bash(git -C /c/git/wallot show main:store/index.ts)",
+      "Bash(git -C /c/git/wallot show main:components/ui/index.tsx)",
+      "Bash(git -C /c/git/wallot show main:lib/supabase.ts)",
+      "Bash(git -C /c/git/wallot show main:lib/openai.ts)",
+      "Bash(git -C /c/git/wallot show main:app/_layout.tsx)",
+      "Bash(git -C /c/git/wallot show main:app/index.tsx)",
+      "Bash(git -C /c/git/wallot show main:app/\\\\\\(tabs\\\\\\)/_layout.tsx)"
+    ]
+  }
+}

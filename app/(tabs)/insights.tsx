@@ -1,230 +1,642 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
+import { Card, ProgressBar, CategoryIcon, Badge } from '@/components/ui';
 import {
-  View, Text, TextInput, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { askInsights } from '@/lib/openai'
-import { useFinancialContext, useMonthSummary, formatCurrency } from '@/hooks/useEntries'
-import { Colors, FontSizes, Spacing, Radius } from '@/constants/theme'
-import type { AIMessage } from '@/types'
+  mockHealthScore,
+  mockSpendingTrend,
+  mockInsightChips,
+  mockCategoryBreakdown,
+} from '@/data/mock';
+import { formatCurrency } from '@/hooks/useEntries';
+import Svg, { Path, Defs, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
 
-const SUGGESTED = [
-  'How much did I save this month?',
-  'Which category can I reduce?',
-  'Compare my last 2 months',
-  'What are my spending habits?',
-  'How can I save more?',
-]
+const trendTabs = ['3M', '6M', '1Y'];
 
-export default function Insights() {
-  const [messages, setMessages] = useState<AIMessage[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const context = useFinancialContext()
-  const summary = useMonthSummary()
-  const scrollRef = useRef<ScrollView>(null)
+export default function InsightsScreen() {
+  const insets = useSafeAreaInsets();
+  const [askText, setAskText] = useState('');
+  const [trendTab, setTrendTab] = useState('3M');
+  const [showAIAnswer, setShowAIAnswer] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState({ year: 2026, month: 2 }); // 0-indexed
 
-  useEffect(() => {
-    // Greeting with real data
-    setMessages([
-      {
-        id: '0',
-        role: 'assistant',
-        content: `Hey! I've analysed your finances for this month. You've spent **${formatCurrency(summary.total_expenses)}** and earned **${formatCurrency(summary.total_income)}**. Ask me anything! 📊`,
-        timestamp: new Date().toISOString(),
-      },
-    ])
-  }, [])
-
-  const send = async (text: string) => {
-    if (!text.trim() || loading) return
-    setInput('')
-
-    const userMsg: AIMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, userMsg])
-    setLoading(true)
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
-
-    const reply = await askInsights(text, context)
-    const aiMsg: AIMessage = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: reply,
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, aiMsg])
-    setLoading(false)
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100)
-  }
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthLabel = `${MONTHS[selectedMonth.month]} ${selectedMonth.year}`;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <Text style={styles.title}>Ask Wallot</Text>
-
-      {/* AI Summary card */}
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>AI insight · this month</Text>
-        <Text style={styles.summaryText}>
-          Balance {formatCurrency(summary.balance)} · {summary.top_categories[0]?.category ?? 'no'} is your top expense
-        </Text>
-      </View>
-
-      {/* Chat */}
-      <ScrollView
-        ref={scrollRef}
-        style={styles.chatScroll}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      >
-        {messages.map((msg) => (
-          <View
-            key={msg.id}
-            style={[styles.bubble, msg.role === 'user' ? styles.bubbleUser : styles.bubbleAI]}
-          >
-            {msg.role === 'assistant' && <Text style={styles.tag}>WALLOT</Text>}
-            <Text style={[styles.bubbleText, msg.role === 'user' && { color: '#fff' }]}>
-              {msg.content}
-            </Text>
-          </View>
-        ))}
-        {loading && (
-          <View style={[styles.bubble, styles.bubbleAI]}>
-            <Text style={styles.tag}>WALLOT</Text>
-            <ActivityIndicator color={Colors.primary} size="small" />
-          </View>
-        )}
-
-        {/* Suggestions */}
-        {messages.length <= 1 && (
-          <View style={styles.suggestions}>
-            <Text style={styles.suggestionsLabel}>Suggested questions</Text>
-            {SUGGESTED.map((q) => (
-              <TouchableOpacity key={q} style={styles.suggestion} onPress={() => send(q)}>
-                <Text style={styles.suggestionText}>{q}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Input */}
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask Wallot anything..."
-          placeholderTextColor={Colors.textHint}
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={() => send(input)}
-          returnKeyType="send"
-          multiline
-        />
-        <TouchableOpacity
-          style={[styles.sendBtn, !input.trim() && { opacity: 0.4 }]}
-          onPress={() => send(input)}
-          disabled={!input.trim() || loading}
-        >
-          <Text style={styles.sendIcon}>→</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Insights</Text>
+        <TouchableOpacity style={styles.monthPill} onPress={() => setShowMonthPicker(true)}>
+          <Text style={styles.monthPillText}>{monthLabel}</Text>
+          <Ionicons name="chevron-down" size={14} color={colors.textMid} />
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
-  )
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* AI Ask Card */}
+        <View style={styles.section}>
+          <Card style={styles.askCard}>
+            <View style={styles.askHeader}>
+              <Ionicons name="sparkles" size={16} color={colors.green} />
+              <Text style={styles.askLabel}>Ask Wallot AI</Text>
+            </View>
+            <View style={styles.askInputRow}>
+              <TextInput
+                style={styles.askInput}
+                placeholder="What did I spend most on this month?"
+                placeholderTextColor={colors.textDim}
+                value={askText}
+                onChangeText={setAskText}
+              />
+              <TouchableOpacity
+                style={styles.askSendBtn}
+                onPress={() => setShowAIAnswer(true)}
+              >
+                <Ionicons name="send" size={16} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+            {showAIAnswer && (
+              <View style={styles.aiAnswer}>
+                <Text style={styles.aiAnswerText}>
+                  Your highest spending this month was on <Text style={{ fontWeight: '700' }}>Housing</Text> at R$1,500 (44%),
+                  followed by <Text style={{ fontWeight: '700' }}>Food</Text> at R$978.35 (29%).
+                  Consider reviewing your food budget — it's 2% over the limit you set.
+                </Text>
+              </View>
+            )}
+          </Card>
+        </View>
+
+        {/* Health Score */}
+        <View style={styles.section}>
+          <View style={styles.healthCard}>
+            <View style={styles.healthHeader}>
+              <View>
+                <Text style={styles.healthLabel}>Financial Health Score</Text>
+                <View style={styles.healthScoreRow}>
+                  <Text style={styles.healthScore}>{mockHealthScore.score}</Text>
+                  <Text style={styles.healthMax}>/ {mockHealthScore.maxScore}</Text>
+                  <Badge
+                    label={`${mockHealthScore.label} ↑`}
+                    color={colors.greenLight}
+                    bgColor="rgba(255,255,255,0.15)"
+                    size="md"
+                  />
+                </View>
+              </View>
+              <Text style={styles.healthChange}>
+                +{mockHealthScore.change} vs {mockHealthScore.comparedTo}
+              </Text>
+            </View>
+            <View style={styles.healthBarWrap}>
+              <ProgressBar
+                progress={mockHealthScore.score / mockHealthScore.maxScore}
+                color={colors.green}
+                height={8}
+              />
+              <View style={styles.healthLabels}>
+                <Text style={styles.healthBarLabel}>Poor</Text>
+                <Text style={styles.healthBarLabel}>Fair</Text>
+                <Text style={styles.healthBarLabel}>Good</Text>
+                <Text style={styles.healthBarLabel}>Great</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Spending Trend */}
+        <View style={styles.section}>
+          <Card>
+            <View style={styles.trendHeader}>
+              <Text style={styles.trendTitle}>Spending Trend</Text>
+              <View style={styles.trendTabs}>
+                {trendTabs.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.trendTab, trendTab === t && styles.trendTabActive]}
+                    onPress={() => setTrendTab(t)}
+                  >
+                    <Text
+                      style={[
+                        styles.trendTabText,
+                        trendTab === t && styles.trendTabTextActive,
+                      ]}
+                    >
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            <SparklineChart data={mockSpendingTrend} />
+            <View style={styles.legendRow}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: colors.green }]} />
+                <Text style={styles.legendText}>Income</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: colors.red }]} />
+                <Text style={styles.legendText}>Expenses</Text>
+              </View>
+            </View>
+          </Card>
+        </View>
+
+        {/* Insight Chips */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Quick Insights</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+            {mockInsightChips.map((chip) => {
+              const chipColors = {
+                green: { bg: colors.greenSoft, text: colors.green, border: colors.greenLight },
+                red: { bg: colors.redLight, text: colors.red, border: '#fecaca' },
+                yellow: { bg: colors.yellowLight, text: '#b45309', border: '#fde68a' },
+              };
+              const c = chipColors[chip.color];
+              return (
+                <View
+                  key={chip.id}
+                  style={[
+                    styles.insightChip,
+                    { backgroundColor: c.bg, borderColor: c.border },
+                  ]}
+                >
+                  <Ionicons name={chip.icon as any} size={18} color={c.text} />
+                  <View>
+                    <Text style={[styles.chipTitle, { color: c.text }]}>{chip.title}</Text>
+                    <Text style={styles.chipSubtitle}>{chip.subtitle}</Text>
+                  </View>
+                  <Text style={[styles.chipValue, { color: c.text }]}>{chip.value}</Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Category Breakdown */}
+        <View style={styles.section}>
+          <Card>
+            <Text style={styles.breakdownTitle}>Category Breakdown</Text>
+            {mockCategoryBreakdown.map((cat) => {
+              const info = categoryColors[cat.category] || categoryColors.other;
+              return (
+                <View key={cat.category} style={styles.breakdownRow}>
+                  <CategoryIcon category={cat.category} size={36} />
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.breakdownLabelRow}>
+                      <Text style={styles.breakdownName}>
+                        {cat.category.charAt(0).toUpperCase() + cat.category.slice(1)}
+                      </Text>
+                      <Text style={styles.breakdownAmount}>{formatCurrency(cat.amount)}</Text>
+                    </View>
+                    <View style={styles.breakdownBarRow}>
+                      <ProgressBar
+                        progress={cat.percentage / 100}
+                        color={info.color}
+                        height={4}
+                        style={{ flex: 1 }}
+                      />
+                      <Text style={styles.breakdownPct}>{cat.percentage}%</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        </View>
+      </ScrollView>
+
+      {/* Month Picker Modal */}
+      <Modal visible={showMonthPicker} transparent animationType="slide" onRequestClose={() => setShowMonthPicker(false)}>
+        <TouchableOpacity style={monthPickerStyles.overlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)} />
+        <View style={monthPickerStyles.sheet}>
+          <View style={monthPickerStyles.handle} />
+          <View style={monthPickerStyles.yearRow}>
+            <TouchableOpacity onPress={() => setSelectedMonth((p) => ({ ...p, year: p.year - 1 }))}>
+              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
+            </TouchableOpacity>
+            <Text style={monthPickerStyles.year}>{selectedMonth.year}</Text>
+            <TouchableOpacity onPress={() => setSelectedMonth((p) => ({ ...p, year: p.year + 1 }))}>
+              <Ionicons name="chevron-forward" size={22} color={colors.textMid} />
+            </TouchableOpacity>
+          </View>
+          <View style={monthPickerStyles.grid}>
+            {MONTHS.map((m, i) => {
+              const isActive = i === selectedMonth.month;
+              return (
+                <TouchableOpacity
+                  key={m}
+                  style={[monthPickerStyles.monthBtn, isActive && monthPickerStyles.monthBtnActive]}
+                  onPress={() => { setSelectedMonth((p) => ({ ...p, month: i })); setShowMonthPicker(false); }}
+                >
+                  <Text style={[monthPickerStyles.monthText, isActive && monthPickerStyles.monthTextActive]}>{m}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
-  title: {
-    fontSize: FontSizes.xxl,
+// Simple sparkline chart using SVG
+function SparklineChart({
+  data,
+}: {
+  data: { month: string; income: number; expenses: number }[];
+}) {
+  const width = 320;
+  const height = 120;
+  const padding = 10;
+
+  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expenses]));
+
+  const getY = (val: number) =>
+    height - padding - ((val / maxVal) * (height - padding * 2));
+  const getX = (i: number) =>
+    padding + (i / (data.length - 1)) * (width - padding * 2);
+
+  const incomePath = data
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.income)}`)
+    .join(' ');
+
+  const expensePath = data
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.expenses)}`)
+    .join(' ');
+
+  const incomeArea =
+    incomePath +
+    ` L ${getX(data.length - 1)} ${height - padding} L ${getX(0)} ${height - padding} Z`;
+
+  return (
+    <View style={{ alignItems: 'center', marginVertical: 12 }}>
+      <Svg width={width} height={height}>
+        <Defs>
+          <SvgGrad id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={colors.green} stopOpacity="0.2" />
+            <Stop offset="1" stopColor={colors.green} stopOpacity="0" />
+          </SvgGrad>
+        </Defs>
+        <Path d={incomeArea} fill="url(#greenGrad)" />
+        <Path d={incomePath} stroke={colors.green} strokeWidth={2.5} fill="none" />
+        <Path d={expensePath} stroke={colors.red} strokeWidth={2} fill="none" strokeDasharray="6,4" />
+      </Svg>
+      <View style={sparkStyles.months}>
+        {data.map((d) => (
+          <Text key={d.month} style={sparkStyles.monthLabel}>
+            {d.month}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const sparkStyles = StyleSheet.create({
+  months: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 320,
+    paddingHorizontal: 10,
+  },
+  monthLabel: {
+    fontSize: 10,
+    color: colors.textDim,
+    fontWeight: '500',
+  },
+});
+
+const monthPickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.lg,
+    paddingBottom: 40,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  yearRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  year: {
+    fontSize: typography.lg,
     fontWeight: '800',
-    color: Colors.textPrimary,
-    letterSpacing: -0.5,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    marginBottom: Spacing.md,
+    color: colors.text,
   },
-  summaryCard: {
-    marginHorizontal: Spacing.lg,
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.lg,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  monthBtn: {
+    width: '22%',
+    paddingVertical: 12,
+    borderRadius: radius.base,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: Colors.borderStrong,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    borderColor: colors.border,
+    alignItems: 'center',
   },
-  summaryLabel: { fontSize: FontSizes.xs, color: Colors.textMuted, marginBottom: 4 },
-  summaryText: { fontSize: FontSizes.md, fontWeight: '600', color: Colors.textPrimary, lineHeight: 22 },
-  chatScroll: { flex: 1, paddingHorizontal: Spacing.lg },
-  bubble: {
-    maxWidth: '85%',
-    borderRadius: 14,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
+  monthBtnActive: {
+    backgroundColor: colors.green,
+    borderColor: colors.green,
   },
-  bubbleAI: {
-    backgroundColor: Colors.bgCard,
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
+  monthText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
+  },
+  monthTextActive: {
+    color: colors.white,
+  },
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
+  },
+  pageTitle: {
+    fontSize: typography.xl,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  monthPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.white,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
+    ...shadows.sm,
   },
-  bubbleUser: {
-    backgroundColor: '#1a3a20',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
+  monthPillText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
   },
-  tag: { fontSize: 9, fontWeight: '700', color: Colors.primary, marginBottom: 3, letterSpacing: 1 },
-  bubbleText: { fontSize: FontSizes.sm, color: Colors.textSecondary, lineHeight: 20 },
-  suggestions: { marginTop: Spacing.md },
-  suggestionsLabel: {
-    fontSize: FontSizes.xs,
-    color: Colors.textHint,
+  section: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  sectionLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    marginBottom: 10,
   },
-  suggestion: {
-    padding: Spacing.sm,
-    backgroundColor: Colors.bgCard,
+  askCard: {
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    marginBottom: Spacing.xs,
+    borderColor: colors.greenLight,
+    backgroundColor: colors.greenSoft,
   },
-  suggestionText: { fontSize: FontSizes.sm, color: Colors.textMuted },
-  inputRow: {
+  askHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
   },
-  input: {
+  askLabel: {
+    fontSize: typography.sm,
+    fontWeight: '700',
+    color: colors.green,
+  },
+  askInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  askInput: {
     flex: 1,
-    backgroundColor: Colors.bgCard,
+    backgroundColor: colors.white,
+    borderRadius: radius.base,
+    paddingHorizontal: 14,
+    height: 42,
+    fontSize: typography.sm,
+    color: colors.text,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    color: Colors.textPrimary,
-    fontSize: FontSizes.sm,
-    maxHeight: 100,
+    borderColor: colors.border,
   },
-  sendBtn: {
+  askSendBtn: {
     width: 42,
     height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.primary,
+    borderRadius: radius.base,
+    backgroundColor: colors.green,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendIcon: { color: Colors.bg, fontSize: FontSizes.lg, fontWeight: '700' },
-})
+  aiAnswer: {
+    marginTop: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    padding: spacing.base,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  aiAnswerText: {
+    fontSize: typography.sm,
+    color: colors.textMid,
+    lineHeight: 20,
+  },
+  healthCard: {
+    backgroundColor: colors.greenDeep,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    ...shadows.green,
+  },
+  healthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  healthLabel: {
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  healthScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  healthScore: {
+    fontSize: 40,
+    fontWeight: '800',
+    color: colors.white,
+  },
+  healthMax: {
+    fontSize: typography.lg,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.4)',
+    marginRight: 8,
+  },
+  healthChange: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.greenLight,
+    marginTop: 8,
+  },
+  healthBarWrap: {
+    gap: 6,
+  },
+  healthLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  healthBarLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '500',
+  },
+  trendHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  trendTitle: {
+    fontSize: typography.md,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  trendTabs: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  trendTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+  },
+  trendTabActive: {
+    backgroundColor: colors.greenDeep,
+  },
+  trendTabText: {
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  trendTabTextActive: {
+    color: colors.white,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  insightChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    borderRadius: radius.base,
+    borderWidth: 1,
+    marginRight: 10,
+    minWidth: 180,
+  },
+  chipTitle: {
+    fontSize: typography.sm,
+    fontWeight: '700',
+  },
+  chipSubtitle: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  chipValue: {
+    fontSize: typography.md,
+    fontWeight: '800',
+    marginLeft: 'auto',
+  },
+  breakdownTitle: {
+    fontSize: typography.md,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 14,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.base,
+  },
+  breakdownLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  breakdownName: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  breakdownAmount: {
+    fontSize: typography.sm,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  breakdownBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  breakdownPct: {
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.textMuted,
+    width: 30,
+    textAlign: 'right',
+  },
+});

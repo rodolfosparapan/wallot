@@ -1,5 +1,5 @@
-import { Redirect } from 'expo-router'
+import { Redirect } from 'expo-router';
 
 export default function AddTab() {
-  return <Redirect href="/entry/add" />
+  return <Redirect href="/entry/add" />;
 }

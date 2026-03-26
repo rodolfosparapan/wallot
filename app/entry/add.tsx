@@ -371,8 +371,8 @@ const styles = StyleSheet.create({
   botAvatar: {
     width: 30,
     height: 30,
-    borderRadius: 12,
-    backgroundColor: colors.green,
+    borderRadius: 11,
+    backgroundColor: colors.greenDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },

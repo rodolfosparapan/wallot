@@ -44,7 +44,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.profileCard}>
             <View style={styles.profileAvatar}>
-              <Ionicons name="person" size={28} color={colors.greenMid} />
+              <Ionicons name="person" size={28} color="rgba(255,255,255,0.9)" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.profileName}>{fullName}</Text>
@@ -189,11 +189,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 20,
-    backgroundColor: colors.greenLight,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   profileName: {
     fontSize: typography.lg,

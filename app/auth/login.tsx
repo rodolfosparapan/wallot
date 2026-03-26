@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { WLogo } from '@/components/WLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function LoginScreen() {
   const router = useRouter();
@@ -38,17 +39,20 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Hero */}
-        <View style={[styles.hero, { paddingTop: insets.top + 40 }]}>
-          <View style={styles.heroLogoWrap}>
-            <Ionicons name="wallet" size={28} color={colors.greenLight} />
+        <View style={[styles.hero, { paddingTop: insets.top + 24 }]}>
+          <View style={styles.heroLogoRow}>
+            <View style={styles.heroLogoWrap}>
+              <WLogo size={20} color={colors.green} />
+            </View>
+            <Text style={styles.heroLogoName}>wallot</Text>
           </View>
           <Text style={styles.heroTitle}>
-            {isLogin ? 'Welcome back!' : 'Create your account'}
+            {isLogin ? 'Welcome back! 👋' : 'Create your account ✨'}
           </Text>
           <Text style={styles.heroSubtitle}>
             {isLogin
-              ? 'Sign in to manage your finances'
-              : 'Start tracking your finances with AI'}
+              ? 'Sign in to your account to continue'
+              : 'Start tracking smarter today'}
           </Text>
         </View>
 
@@ -74,57 +78,66 @@ export default function LoginScreen() {
           {/* Form */}
           <View style={styles.form}>
             {!isLogin && (
-              <View style={styles.inputWrap}>
-                <View style={styles.inputIcon}>
-                  <Ionicons name="person" size={18} color={colors.textMuted} />
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Full name</Text>
+                <View style={styles.inputWrap}>
+                  <View style={styles.inputIcon}>
+                    <Ionicons name="person" size={17} color={colors.textDim} />
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Jonathan Silva"
+                    placeholderTextColor={colors.textDim}
+                    value={fullName}
+                    onChangeText={setFullName}
+                  />
                 </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full name"
-                  placeholderTextColor={colors.textDim}
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
               </View>
             )}
 
-            <View style={styles.inputWrap}>
-              <View style={styles.inputIcon}>
-                <Ionicons name="mail" size={18} color={colors.textMuted} />
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Email</Text>
+              <View style={styles.inputWrap}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="mail" size={17} color={colors.textDim} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="your@email.com"
+                  placeholderTextColor={colors.textDim}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Email address"
-                placeholderTextColor={colors.textDim}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
             </View>
 
-            <View style={styles.inputWrap}>
-              <View style={styles.inputIcon}>
-                <Ionicons name="lock-closed" size={18} color={colors.textMuted} />
-              </View>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Password"
-                placeholderTextColor={colors.textDim}
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={18}
-                  color={colors.textMuted}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Password</Text>
+              <View style={styles.inputWrap}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="lock-closed" size={17} color={colors.textDim} />
+                </View>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.textDim}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.eyeBtn}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={18}
+                    color={colors.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {isLogin && (
@@ -147,14 +160,14 @@ export default function LoginScreen() {
           </View>
 
           {/* Social */}
-          <View style={styles.socialRow}>
+          <View style={styles.socialCol}>
             <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Google login will be available soon.')}>
               <Ionicons name="logo-google" size={20} color={colors.text} />
-              <Text style={styles.socialText}>Google</Text>
+              <Text style={styles.socialText}>Continue with Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Apple login will be available soon.')}>
               <Ionicons name="logo-apple" size={20} color={colors.text} />
-              <Text style={styles.socialText}>Apple</Text>
+              <Text style={styles.socialText}>Continue with Apple</Text>
             </TouchableOpacity>
           </View>
 
@@ -178,31 +191,40 @@ const styles = StyleSheet.create({
   hero: {
     backgroundColor: colors.greenDeep,
     paddingHorizontal: spacing.xl,
-    paddingBottom: 40,
+    paddingBottom: 36,
+  },
+  heroLogoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomLeftRadius: radius.xxl,
-    borderBottomRightRadius: radius.xxl,
+    gap: 10,
+    marginBottom: 20,
   },
   heroLogoWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
-  heroTitle: {
-    fontSize: typography.xl,
+  heroLogoName: {
+    fontSize: 20,
     fontWeight: '800',
     color: colors.white,
+    letterSpacing: -0.5,
+  },
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: colors.white,
+    lineHeight: 32,
     marginBottom: 6,
   },
   heroSubtitle: {
-    fontSize: typography.base,
-    color: colors.greenLight,
+    fontSize: typography.sm,
+    color: 'rgba(187,247,208,0.6)',
     fontWeight: '500',
   },
   formSection: {
@@ -229,25 +251,36 @@ const styles = StyleSheet.create({
     backgroundColor: colors.greenDeep,
   },
   tabText: {
-    fontSize: typography.base,
-    fontWeight: '600',
+    fontSize: typography.sm,
+    fontWeight: '700',
     color: colors.textMuted,
   },
   tabTextActive: {
     color: colors.white,
   },
   form: {
-    gap: 14,
+    gap: 12,
     marginBottom: spacing.xl,
+  },
+  field: {
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    paddingLeft: 2,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: radius.base,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     height: 52,
     ...shadows.sm,
   },
@@ -271,13 +304,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitBtn: {
-    backgroundColor: colors.green,
+    backgroundColor: colors.greenDeep,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 16,
-    borderRadius: radius.base,
+    borderRadius: radius.lg,
     marginTop: 4,
     ...shadows.green,
   },
@@ -302,20 +335,18 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontWeight: '500',
   },
-  socialRow: {
-    flexDirection: 'row',
-    gap: 12,
+  socialCol: {
+    gap: 10,
     marginBottom: spacing.xl,
   },
   socialBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 14,
     backgroundColor: colors.white,
-    borderRadius: radius.base,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.sm,

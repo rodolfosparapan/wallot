@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '@/constants/theme';
+import { WLogo } from '@/components/WLogo';
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function SplashScreen() {
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <View style={styles.logoWrap}>
           <View style={styles.logoCircle}>
-            <Ionicons name="wallet" size={40} color={colors.greenLight} />
+            <WLogo size={48} color={colors.green} />
           </View>
         </View>
         <Text style={styles.brandName}>wallot</Text>
@@ -86,22 +86,23 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   tagline: {
-    fontSize: typography.base,
-    color: colors.greenLight,
+    fontSize: 14,
+    color: 'rgba(187,247,208,0.6)',
     marginTop: 6,
     fontWeight: '500',
+    letterSpacing: 0.3,
   },
   loaderWrap: {
     position: 'absolute',
     bottom: 80,
-    left: 60,
-    right: 60,
+    left: 32,
+    right: 32,
     alignItems: 'center',
   },
   loaderTrack: {
     width: '100%',
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -111,8 +112,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   loadingText: {
-    fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    color: 'rgba(187,247,208,0.4)',
     marginTop: 12,
+    letterSpacing: 0.6,
   },
 });

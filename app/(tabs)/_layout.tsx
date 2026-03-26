@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, shadows } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function TabBarIcon({ name, focused }: { name: keyof typeof Ionicons.glyphMap; focused: boolean }) {
+function TabBarIcon({ name, label, focused }: { name: keyof typeof Ionicons.glyphMap; label: string; focused: boolean }) {
   return (
     <View style={styles.tabIconWrap}>
-      <Ionicons name={name} size={24} color={focused ? colors.green : colors.textDim} />
+      <Ionicons name={name} size={22} color={focused ? colors.greenDark : colors.textMuted} />
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.activeDot} />}
     </View>
   );
@@ -32,13 +33,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ focused }) => <TabBarIcon name="home" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="home" label="Home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="entries"
         options={{
-          tabBarIcon: ({ focused }) => <TabBarIcon name="list" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="list" label="Entries" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -58,13 +59,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="insights"
         options={{
-          tabBarIcon: ({ focused }) => <TabBarIcon name="stats-chart" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="sparkles" label="Ask AI" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          tabBarIcon: ({ focused }) => <TabBarIcon name="settings" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="settings" label="Settings" focused={focused} />,
         }}
       />
     </Tabs>
@@ -85,17 +86,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
   },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textDim,
+  },
+  tabLabelActive: {
+    color: colors.greenDark,
+  },
   activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: colors.green,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.greenMid,
   },
   fab: {
     width: 56,
     height: 56,
     borderRadius: 20,
-    backgroundColor: colors.green,
+    backgroundColor: colors.greenDeep,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -20,

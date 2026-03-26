@@ -39,7 +39,7 @@ export const typography = {
   base: 15,
   md: 16,
   lg: 18,
-  xl: 22,
+  xl: 24,
   xxl: 28,
   hero: 36,
 };
@@ -82,7 +82,7 @@ export const shadows = {
   green: {
     shadowColor: '#14532d',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.28,
     shadowRadius: 32,
     elevation: 8,
   },

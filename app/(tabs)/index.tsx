@@ -83,24 +83,18 @@ export default function DashboardScreen() {
             ].map((method) => (
               <TouchableOpacity
                 key={method.label}
-                style={[
-                  styles.methodPill,
-                  method.primary && styles.methodPillPrimary,
-                ]}
+                style={styles.methodPill}
                 onPress={() => router.push('/entry/add')}
                 activeOpacity={0.7}
               >
-                <Ionicons
-                  name={method.icon as any}
-                  size={20}
-                  color={method.primary ? colors.white : colors.textMid}
-                />
-                <Text
-                  style={[
-                    styles.methodLabel,
-                    method.primary && styles.methodLabelPrimary,
-                  ]}
-                >
+                <View style={[styles.methodIcon, method.primary && styles.methodIconPrimary]}>
+                  <Ionicons
+                    name={method.icon as any}
+                    size={22}
+                    color={method.primary ? colors.white : colors.textMid}
+                  />
+                </View>
+                <Text style={styles.methodLabel}>
                   {method.label}
                 </Text>
               </TouchableOpacity>
@@ -116,7 +110,7 @@ export default function DashboardScreen() {
               const catInfo = categoryColors[cat.category] || categoryColors.other;
               return (
                 <Card key={cat.category} style={styles.categoryCard}>
-                  <CategoryIcon category={cat.category} size={36} />
+                  <CategoryIcon category={cat.category} size={36} monochrome />
                   <Text style={styles.categoryName}>
                     {cat.category.charAt(0).toUpperCase() + cat.category.slice(1)}
                   </Text>
@@ -147,7 +141,7 @@ export default function DashboardScreen() {
           />
           {recentEntries.map((entry) => (
             <View key={entry.id} style={styles.entryRow}>
-              <CategoryIcon category={entry.category} size={42} />
+              <CategoryIcon category={entry.category} size={42} monochrome />
               <View style={styles.entryInfo}>
                 <Text style={styles.entryDesc}>{entry.description}</Text>
                 <View style={styles.entryMeta}>
@@ -249,7 +243,7 @@ const styles = StyleSheet.create({
   },
   balanceCard: {
     backgroundColor: colors.greenDeep,
-    borderRadius: radius.xl,
+    borderRadius: radius.xxl,
     padding: spacing.xl,
     ...shadows.green,
   },
@@ -261,11 +255,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 42,
     fontWeight: '800',
     color: colors.white,
-    marginTop: 4,
-    marginBottom: 20,
+    letterSpacing: -2,
+    marginTop: 8,
+    marginBottom: 18,
   },
   balanceStats: {
     flexDirection: 'row',
@@ -309,25 +304,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 14,
+  },
+  methodIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 20,
     backgroundColor: colors.white,
-    borderRadius: radius.base,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
     ...shadows.sm,
   },
-  methodPillPrimary: {
+  methodIconPrimary: {
     backgroundColor: colors.green,
     borderColor: colors.green,
-    ...shadows.green,
+    borderWidth: 0,
   },
+  methodPillPrimary: {},
   methodLabel: {
     fontSize: typography.xs,
     fontWeight: '600',
     color: colors.textMid,
-  },
-  methodLabelPrimary: {
-    color: colors.white,
   },
   categoryCard: {
     width: 140,
@@ -356,10 +354,14 @@ const styles = StyleSheet.create({
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    padding: 13,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 8,
+    ...shadows.sm,
   },
   entryInfo: {
     flex: 1,

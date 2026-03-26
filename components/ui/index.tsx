@@ -39,7 +39,7 @@ export function Button({
   fullWidth,
 }: ButtonProps) {
   const variantStyles = {
-    primary: { bg: colors.green, text: colors.white },
+    primary: { bg: colors.greenDeep, text: colors.white },
     secondary: { bg: colors.white, text: colors.text },
     ghost: { bg: 'transparent', text: colors.textMid },
     danger: { bg: colors.redLight, text: colors.red },
@@ -176,9 +176,10 @@ export function Divider({ style }: { style?: ViewStyle }) {
 interface CategoryIconProps {
   category: string;
   size?: number;
+  monochrome?: boolean;
 }
 
-export function CategoryIcon({ category, size = 40 }: CategoryIconProps) {
+export function CategoryIcon({ category, size = 40, monochrome = false }: CategoryIconProps) {
   const cat = categoryColors[category] || categoryColors.other;
   const iconSize = size * 0.5;
 
@@ -190,11 +191,17 @@ export function CategoryIcon({ category, size = 40 }: CategoryIconProps) {
           width: size,
           height: size,
           borderRadius: size * 0.35,
-          backgroundColor: cat.bg,
+          backgroundColor: monochrome ? colors.bg : cat.bg,
+          borderWidth: monochrome ? 1 : 0,
+          borderColor: monochrome ? colors.border : undefined,
         },
       ]}
     >
-      <Ionicons name={cat.icon as any} size={iconSize} color={cat.color} />
+      <Ionicons
+        name={cat.icon as any}
+        size={iconSize}
+        color={monochrome ? colors.textMid : cat.color}
+      />
     </View>
   );
 }

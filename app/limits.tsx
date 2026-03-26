@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: colors.green,
+    backgroundColor: colors.greenDeep,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.green,

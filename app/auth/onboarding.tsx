@@ -18,39 +18,45 @@ const { width } = Dimensions.get('window');
 const slides = [
   {
     id: '1',
-    title: 'Just talk or type naturally',
+    titleParts: [{ text: 'Just ' }, { text: 'talk', accent: true }, { text: ' or type naturally' }],
     description:
-      'Tell Wallot what you spent — by voice, text, or photo. Our AI understands and logs it instantly.',
-    bgColor: colors.greenDeep,
-    accentColor: colors.green,
+      'Say "lunch R$87" or snap a receipt — Wallot\'s AI logs everything automatically. No forms, no friction.',
+    bgColor: '#f0fdf4',
+    accentColor: colors.greenMid,
     icon: 'mic' as const,
     bubbleText: '🍕 Lunch R$87',
     pillText: 'Logged! R$87',
-    pillColor: colors.green,
+    pillBg: colors.greenLight,
+    pillTextColor: colors.greenDark,
+    step: '01 / 03',
   },
   {
     id: '2',
-    title: 'Snap a receipt, done',
+    titleParts: [{ text: 'Snap a receipt, ' }, { text: 'done', accent: true }],
     description:
-      'Point your camera at any receipt. GPT-4o Vision reads the total, merchant, and category for you.',
-    bgColor: '#78350f',
-    accentColor: '#f59e0b',
+      'GPT-4o Vision reads your receipts instantly — amount, store, category, all extracted automatically.',
+    bgColor: '#fefce8',
+    accentColor: '#d97706',
     icon: 'camera' as const,
     bubbleText: '📷 Receipt scanned',
     pillText: 'R$213,45 · Food',
-    pillColor: '#f59e0b',
+    pillBg: '#fef3c7',
+    pillTextColor: '#92400e',
+    step: '02 / 03',
   },
   {
     id: '3',
-    title: 'Your AI financial advisor',
+    titleParts: [{ text: 'Your ' }, { text: 'AI financial', accent: true }, { text: ' advisor' }],
     description:
-      'Get smart insights, budget alerts, and a financial health score — all powered by AI.',
-    bgColor: '#1e3a5f',
-    accentColor: '#3b82f6',
+      'Ask anything about your money. Wallot gives smart insights, budget alerts and tips — all powered by GPT-4o.',
+    bgColor: '#eff6ff',
+    accentColor: '#6366f1',
     icon: 'star' as const,
     bubbleText: '💡 Food up +23%',
     pillText: 'Score 72 · Good',
-    pillColor: '#3b82f6',
+    pillBg: '#eff6ff',
+    pillTextColor: '#4338ca',
+    step: '03 / 03',
   },
 ];
 
@@ -83,30 +89,33 @@ export default function OnboardingScreen() {
   const renderSlide = ({ item }: { item: (typeof slides)[0] }) => (
     <View style={[styles.slide, { width }]}>
       <View style={[styles.illustrationCard, { backgroundColor: item.bgColor }]}>
-        <View style={[styles.iconCircle, { backgroundColor: `${item.accentColor}30` }]}>
+        <View style={[styles.iconCircle, { backgroundColor: `${item.accentColor}20` }]}>
           <Ionicons name={item.icon} size={36} color={item.accentColor} />
         </View>
         <View style={styles.chatBubble}>
           <Text style={styles.chatBubbleText}>{item.bubbleText}</Text>
         </View>
-        <View style={[styles.confirmPill, { backgroundColor: item.pillColor }]}>
-          <Ionicons name="checkmark-circle" size={14} color={colors.white} />
-          <Text style={styles.confirmPillText}>{item.pillText}</Text>
+        <View style={[styles.confirmPill, { backgroundColor: item.pillBg, borderColor: `${item.accentColor}30` }]}>
+          <Ionicons name="checkmark" size={13} color={item.pillTextColor} />
+          <Text style={[styles.confirmPillText, { color: item.pillTextColor }]}>{item.pillText}</Text>
         </View>
       </View>
-      <Text style={styles.slideTitle}>{item.title}</Text>
+      <Text style={styles.stepNum}>{item.step}</Text>
+      <Text style={styles.slideTitle}>
+        {item.titleParts.map((part, i) =>
+          part.accent ? (
+            <Text key={i} style={{ color: colors.greenMid }}>{part.text}</Text>
+          ) : (
+            <Text key={i}>{part.text}</Text>
+          )
+        )}
+      </Text>
       <Text style={styles.slideDescription}>{item.description}</Text>
     </View>
   );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      </View>
-
       <FlatList
         ref={flatListRef}
         data={slides}
@@ -131,12 +140,19 @@ export default function OnboardingScreen() {
             />
           ))}
         </View>
-        <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.8}>
-          <Text style={styles.nextBtnText}>
-            {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
-          </Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.white} />
-        </TouchableOpacity>
+        <View style={styles.btnRow}>
+          {currentIndex < slides.length - 1 && (
+            <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={[styles.nextBtn, currentIndex === slides.length - 1 && styles.getStartedBtn]} onPress={handleNext} activeOpacity={0.8}>
+            <Text style={styles.nextBtnText}>
+              {currentIndex === slides.length - 1 ? 'Get started' : 'Next'}
+            </Text>
+            <Ionicons name="arrow-forward" size={18} color={colors.white} />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -147,51 +163,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-  },
-  skipBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  skipText: {
-    fontSize: typography.base,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
   slide: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: 32,
-    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+    paddingTop: 60,
   },
   illustrationCard: {
-    width: '100%',
-    height: 340,
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
+    width: 260,
+    height: 260,
+    borderRadius: 36,
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 32,
-    ...shadows.md,
+    position: 'relative',
   },
   iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
   },
   chatBubble: {
     backgroundColor: colors.white,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 16,
-    borderBottomLeftRadius: 4,
-    marginBottom: 12,
+    position: 'absolute',
+    top: 30,
+    left: 16,
     ...shadows.sm,
   },
   chatBubbleText: {
@@ -205,59 +205,93 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: radius.full,
+    borderRadius: 12,
+    borderWidth: 1,
+    position: 'absolute',
+    bottom: 36,
+    right: 10,
   },
   confirmPillText: {
-    color: colors.white,
     fontWeight: '700',
-    fontSize: typography.sm,
+    fontSize: 12,
+  },
+  stepNum: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textDim,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
   },
   slideTitle: {
-    fontSize: typography.xl,
+    fontSize: 30,
     fontWeight: '800',
     color: colors.text,
-    textAlign: 'center',
+    lineHeight: 34,
+    letterSpacing: -0.5,
     marginBottom: 12,
   },
   slideDescription: {
     fontSize: typography.base,
     color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
+    lineHeight: 24,
+    fontWeight: '500',
   },
   footer: {
-    paddingHorizontal: spacing.xl,
-    gap: 24,
+    paddingHorizontal: spacing.xxl,
+    gap: 20,
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: colors.textDim,
   },
   dotActive: {
     width: 24,
-    backgroundColor: colors.green,
+    backgroundColor: colors.greenDeep,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  skipBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skipText: {
+    fontSize: typography.base,
+    color: colors.textMuted,
+    fontWeight: '700',
   },
   nextBtn: {
-    backgroundColor: colors.green,
+    flex: 1,
+    backgroundColor: colors.greenDeep,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 16,
-    borderRadius: radius.base,
+    borderRadius: radius.lg,
     ...shadows.green,
+  },
+  getStartedBtn: {
+    backgroundColor: colors.green,
   },
   nextBtnText: {
     color: colors.white,
-    fontSize: typography.md,
-    fontWeight: '700',
+    fontSize: typography.base,
+    fontWeight: '800',
   },
 });

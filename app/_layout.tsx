@@ -17,6 +17,12 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen name="limits" />
+        <Stack.Screen name="search" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="settings/language" />
+        <Stack.Screen name="settings/currency" />
+        <Stack.Screen name="settings/categories" />
+        <Stack.Screen name="settings/change-password" />
       </Stack>
     </>
   );

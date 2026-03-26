@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
@@ -11,8 +12,12 @@ const filters = ['All', 'Expenses', 'Income', 'Food', 'Transport', 'Housing', 'H
 
 export default function EntriesScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   const filteredEntries = mockEntries.filter((entry) => {
     if (search) {
@@ -46,11 +51,11 @@ export default function EntriesScreen() {
       <View style={styles.header}>
         <Text style={styles.pageTitle}>Entries</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerBtn}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => setFilterSheetVisible(true)}>
             <Ionicons name="filter" size={18} color={colors.textMid} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerBtn}>
-            <Ionicons name="calendar" size={18} color={colors.textMid} />
+          <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/search')}>
+            <Ionicons name="search" size={18} color={colors.textMid} />
           </TouchableOpacity>
         </View>
       </View>
@@ -135,6 +140,47 @@ export default function EntriesScreen() {
           </View>
         ))}
       </ScrollView>
+
+      {/* Filter Sheet */}
+      <Modal visible={filterSheetVisible} transparent animationType="slide">
+        <View style={styles.sheetOverlay}>
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Sort & Filter</Text>
+            <Text style={styles.sheetSectionLabel}>Sort by</Text>
+            <View style={styles.sheetRow}>
+              {(['date', 'amount'] as const).map((s) => (
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.sheetChip, sortBy === s && styles.sheetChipActive]}
+                  onPress={() => setSortBy(s)}
+                >
+                  <Text style={[styles.sheetChipText, sortBy === s && styles.sheetChipTextActive]}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.sheetSectionLabel}>Order</Text>
+            <View style={styles.sheetRow}>
+              {([['desc', 'Newest first'], ['asc', 'Oldest first']] as const).map(([v, label]) => (
+                <TouchableOpacity
+                  key={v}
+                  style={[styles.sheetChip, sortOrder === v && styles.sheetChipActive]}
+                  onPress={() => setSortOrder(v)}
+                >
+                  <Text style={[styles.sheetChipText, sortOrder === v && styles.sheetChipTextActive]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.sheetApplyBtn} onPress={() => setFilterSheetVisible(false)}>
+              <Text style={styles.sheetApplyText}>Apply</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -197,7 +243,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   summaryCard: {
     flex: 1,
@@ -217,7 +263,7 @@ const styles = StyleSheet.create({
   },
   dateGroup: {
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.base,
+    marginBottom: spacing.lg,
   },
   dateTitle: {
     fontSize: typography.sm,
@@ -259,6 +305,76 @@ const styles = StyleSheet.create({
   },
   entryAmount: {
     fontSize: typography.base,
+    fontWeight: '700',
+  },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  sheetContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: colors.textDim,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: {
+    fontSize: typography.lg,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  sheetSectionLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  sheetRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  sheetChip: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sheetChipActive: {
+    backgroundColor: colors.greenDeep,
+    borderColor: colors.greenDeep,
+  },
+  sheetChipText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
+  },
+  sheetChipTextActive: {
+    color: colors.white,
+  },
+  sheetApplyBtn: {
+    backgroundColor: colors.green,
+    borderRadius: radius.base,
+    paddingVertical: spacing.base,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  sheetApplyText: {
+    color: colors.white,
+    fontSize: typography.md,
     fontWeight: '700',
   },
 });

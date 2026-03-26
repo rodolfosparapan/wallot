@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
@@ -20,16 +20,21 @@ export default function InsightsScreen() {
   const [askText, setAskText] = useState('');
   const [trendTab, setTrendTab] = useState('3M');
   const [showAIAnswer, setShowAIAnswer] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState({ year: 2026, month: 2 }); // 0-indexed
+
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthLabel = `${MONTHS[selectedMonth.month]} ${selectedMonth.year}`;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.pageTitle}>Insights</Text>
-        <View style={styles.monthPill}>
-          <Text style={styles.monthPillText}>Mar 2026</Text>
+        <TouchableOpacity style={styles.monthPill} onPress={() => setShowMonthPicker(true)}>
+          <Text style={styles.monthPillText}>{monthLabel}</Text>
           <Ionicons name="chevron-down" size={14} color={colors.textMid} />
-        </View>
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -145,7 +150,7 @@ export default function InsightsScreen() {
         {/* Insight Chips */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Quick Insights</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
             {mockInsightChips.map((chip) => {
               const chipColors = {
                 green: { bg: colors.greenSoft, text: colors.green, border: colors.greenLight },
@@ -205,6 +210,37 @@ export default function InsightsScreen() {
           </Card>
         </View>
       </ScrollView>
+
+      {/* Month Picker Modal */}
+      <Modal visible={showMonthPicker} transparent animationType="slide" onRequestClose={() => setShowMonthPicker(false)}>
+        <TouchableOpacity style={monthPickerStyles.overlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)} />
+        <View style={monthPickerStyles.sheet}>
+          <View style={monthPickerStyles.handle} />
+          <View style={monthPickerStyles.yearRow}>
+            <TouchableOpacity onPress={() => setSelectedMonth((p) => ({ ...p, year: p.year - 1 }))}>
+              <Ionicons name="chevron-back" size={22} color={colors.textMid} />
+            </TouchableOpacity>
+            <Text style={monthPickerStyles.year}>{selectedMonth.year}</Text>
+            <TouchableOpacity onPress={() => setSelectedMonth((p) => ({ ...p, year: p.year + 1 }))}>
+              <Ionicons name="chevron-forward" size={22} color={colors.textMid} />
+            </TouchableOpacity>
+          </View>
+          <View style={monthPickerStyles.grid}>
+            {MONTHS.map((m, i) => {
+              const isActive = i === selectedMonth.month;
+              return (
+                <TouchableOpacity
+                  key={m}
+                  style={[monthPickerStyles.monthBtn, isActive && monthPickerStyles.monthBtnActive]}
+                  onPress={() => { setSelectedMonth((p) => ({ ...p, month: i })); setShowMonthPicker(false); }}
+                >
+                  <Text style={[monthPickerStyles.monthText, isActive && monthPickerStyles.monthTextActive]}>{m}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -273,6 +309,66 @@ const sparkStyles = StyleSheet.create({
     fontSize: 10,
     color: colors.textDim,
     fontWeight: '500',
+  },
+});
+
+const monthPickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: spacing.lg,
+    paddingBottom: 40,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  yearRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  year: {
+    fontSize: typography.lg,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  monthBtn: {
+    width: '22%',
+    paddingVertical: 12,
+    borderRadius: radius.base,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  monthBtnActive: {
+    backgroundColor: colors.green,
+    borderColor: colors.green,
+  },
+  monthText: {
+    fontSize: typography.sm,
+    fontWeight: '600',
+    color: colors.textMid,
+  },
+  monthTextActive: {
+    color: colors.white,
   },
 });
 
@@ -362,10 +458,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   aiAnswer: {
-    marginTop: 12,
+    marginTop: spacing.md,
     backgroundColor: colors.white,
     borderRadius: radius.md,
-    padding: 12,
+    padding: spacing.base,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -482,9 +578,9 @@ const styles = StyleSheet.create({
   insightChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    gap: spacing.md,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
     borderRadius: radius.base,
     borderWidth: 1,
     marginRight: 10,
@@ -513,8 +609,8 @@ const styles = StyleSheet.create({
   breakdownRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
+    gap: spacing.md,
+    marginBottom: spacing.base,
   },
   breakdownLabelRow: {
     flexDirection: 'row',

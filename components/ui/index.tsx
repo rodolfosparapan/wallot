@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
 
   // ProgressBar
   progressTrack: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.greenSoft,
     width: '100%',
     overflow: 'hidden',
   },

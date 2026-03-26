@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+
+const WAVEFORM_HEIGHTS = [8, 14, 6, 18, 10, 16, 4, 12, 20, 8, 15, 7, 19, 11, 5, 17, 9, 13, 6, 14];
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -100,13 +103,10 @@ function AITab() {
             <View style={styles.voiceBubble}>
               <Ionicons name="mic" size={16} color={colors.green} />
               <View style={styles.waveform}>
-                {Array.from({ length: 20 }).map((_, i) => (
+                {WAVEFORM_HEIGHTS.map((h, i) => (
                   <View
                     key={i}
-                    style={[
-                      styles.waveBar,
-                      { height: 4 + Math.random() * 16 },
-                    ]}
+                    style={[styles.waveBar, { height: h }]}
                   />
                 ))}
               </View>
@@ -178,10 +178,10 @@ function AITab() {
             onChangeText={setInputText}
           />
         </View>
-        <TouchableOpacity style={styles.cameraBtn}>
+        <TouchableOpacity style={styles.cameraBtn} onPress={() => Alert.alert('Coming soon', 'Photo input will be available soon.')}>
           <Ionicons name="camera" size={20} color={colors.textMid} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.micBtn}>
+        <TouchableOpacity style={styles.micBtn} onPress={() => Alert.alert('Coming soon', 'Voice input will be available soon.')}>
           <Ionicons name="mic" size={22} color={colors.white} />
         </TouchableOpacity>
       </View>

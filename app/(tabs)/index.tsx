@@ -29,10 +29,10 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/search')}>
               <Ionicons name="search" size={20} color={colors.textMid} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtn}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/notifications')}>
               <Ionicons name="notifications" size={20} color={colors.textMid} />
               <View style={styles.notifDot} />
             </TouchableOpacity>

@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -127,7 +128,7 @@ export default function LoginScreen() {
             </View>
 
             {isLogin && (
-              <TouchableOpacity style={styles.forgotLink}>
+              <TouchableOpacity style={styles.forgotLink} onPress={() => router.push('/auth/forgot-password')}>
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
             )}
@@ -147,11 +148,11 @@ export default function LoginScreen() {
 
           {/* Social */}
           <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Google login will be available soon.')}>
               <Ionicons name="logo-google" size={20} color={colors.text} />
               <Text style={styles.socialText}>Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Apple login will be available soon.')}>
               <Ionicons name="logo-apple" size={20} color={colors.text} />
               <Text style={styles.socialText}>Apple</Text>
             </TouchableOpacity>

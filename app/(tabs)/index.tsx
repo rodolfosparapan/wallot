@@ -32,10 +32,10 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/search')}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/dashboard/search')}>
               <Ionicons name="search" size={20} color={colors.textMid} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/notifications')}>
+            <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/dashboard/notifications')}>
               <Ionicons name="notifications" size={20} color={colors.textMid} />
               <View style={styles.notifDot} />
             </TouchableOpacity>

@@ -29,10 +29,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    setError(null);
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Missing fields', 'Please enter your email and password.');
+      setError('Please enter your email and password.');
       return;
     }
     setLoading(true);
@@ -43,7 +45,7 @@ export default function LoginScreen() {
       setAuth(res.token, toUser(res));
       router.replace('/(tabs)');
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Something went wrong.');
+      setError(err.message ?? 'Something went wrong.');
     } finally {
       setLoading(false);
     }
@@ -165,6 +167,12 @@ export default function LoginScreen() {
               <TouchableOpacity style={styles.forgotLink} onPress={() => router.push('/auth/forgot-password')}>
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
+            )}
+
+            {error && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
             )}
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.8} disabled={loading}>
@@ -392,5 +400,15 @@ const styles = StyleSheet.create({
   termsLink: {
     color: colors.green,
     fontWeight: '600',
+  },
+  errorBox: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: radius.base,
+    padding: 12,
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: typography.sm,
+    fontWeight: '500',
   },
 });

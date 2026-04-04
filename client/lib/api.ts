@@ -13,8 +13,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-    throw new Error(err.message ?? `HTTP ${res.status}`);
+    const err = await res.json().catch(() => null);
+    if (err?.errors) {
+      const messages = Object.values(err.errors as Record<string, string[]>).flat();
+      throw new Error(messages.join('\n'));
+    }
+    throw new Error(err?.message ?? err?.title ?? `HTTP ${res.status}`);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

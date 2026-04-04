@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,24 +6,41 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
 import { Card, Divider, Button } from '@/components/ui';
 import { SettingsRow, ToggleRow } from '@/features/settings';
-import { mockUser } from '@/data/mock';
+import { useAuthStore } from '@/stores/authStore';
+import { updateMe } from '@/services/userService';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user, setAuth, clearAuth, token } = useAuthStore();
   const [darkMode, setDarkMode] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState(true);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [incomeGoalVisible, setIncomeGoalVisible] = useState(false);
-  const [fullName, setFullName] = useState(mockUser.full_name);
-  const [email, setEmail] = useState(mockUser.email);
+  const [fullName, setFullName] = useState(user?.full_name ?? '');
+  const [email] = useState(user?.email ?? '');
   const [incomeGoal, setIncomeGoal] = useState('8000');
 
   const handleSignOut = () => {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => router.replace('/auth/login') },
+      {
+        text: 'Sign out', style: 'destructive', onPress: () => {
+          clearAuth();
+          router.replace('/auth/login');
+        }
+      },
     ]);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const updated = await updateMe({ full_name: fullName });
+      if (token && user) setAuth(token, { ...user, full_name: updated.full_name });
+      setEditProfileVisible(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.message ?? 'Failed to update profile.');
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -121,11 +138,11 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.modalField}>
               <Text style={styles.modalLabel}>Email</Text>
-              <TextInput style={styles.modalInput} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput style={[styles.modalInput, { color: colors.textMuted }]} value={email} editable={false} keyboardType="email-address" autoCapitalize="none" />
             </View>
             <View style={styles.modalActions}>
               <Button title="Cancel" variant="secondary" onPress={() => setEditProfileVisible(false)} style={{ flex: 1 }} />
-              <Button title="Save" onPress={() => setEditProfileVisible(false)} style={{ flex: 1 }} />
+              <Button title="Save" onPress={handleSaveProfile} style={{ flex: 1 }} />
             </View>
           </View>
         </View>

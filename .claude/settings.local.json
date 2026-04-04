@@ -32,7 +32,21 @@
       "Bash(git -C /c/git/wallot show main:README.md)",
       "Bash(npm install:*)",
       "Bash(npx expo:*)",
-      "Bash(ls -la c:/git/wallot/app/\\\\\\(tabs\\\\\\)/)"
+      "Bash(ls -la c:/git/wallot/app/\\\\\\(tabs\\\\\\)/)",
+      "Bash(grep -r \"mock\" /c/git/wallot --include=\"*.ts\" --include=\"*.tsx\" ! -path \"*/node_modules/*\")",
+      "Bash(xargs grep:*)",
+      "Read(//c/git//**)",
+      "Read(//c/git/**)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(timeout 10 dotnet run)"
+    ],
+    "additionalDirectories": [
+      "C:\\git\\wallot-api\\WallotApi",
+      "C:\\git\\wallot-api\\WallotApi\\Controllers"
     ]
   }
 }

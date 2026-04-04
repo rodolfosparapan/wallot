@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
 import { Card, ProgressBar, CategoryIcon, Badge } from '@/components/ui';
-import {
-  mockHealthScore,
-  mockSpendingTrend,
-  mockInsightChips,
-  mockCategoryBreakdown,
-} from '@/data/mock';
 import { formatCurrency } from '@/hooks/useEntries';
 import Svg, { Path, Defs, LinearGradient as SvgGrad, Stop } from 'react-native-svg';
+import { getHealthScore, getSpendingTrend, getCategoryBreakdown, getInsightChips, HealthScore } from '@/services/insightService';
+import { InsightChip, CategoryBreakdown, SpendingTrendPoint } from '@/types';
 
 const trendTabs = ['3M', '6M', '1Y'];
 
@@ -21,7 +17,35 @@ export default function InsightsScreen() {
   const [trendTab, setTrendTab] = useState('3M');
   const [showAIAnswer, setShowAIAnswer] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState({ year: 2026, month: 2 }); // 0-indexed
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState({ year: now.getFullYear(), month: now.getMonth() }); // 0-indexed
+
+  const [healthScore, setHealthScore] = useState<HealthScore | null>(null);
+  const [spendingTrend, setSpendingTrend] = useState<SpendingTrendPoint[]>([]);
+  const [insightChips, setInsightChips] = useState<InsightChip[]>([]);
+  const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const monthParam = `${selectedMonth.year}-${String(selectedMonth.month + 1).padStart(2, '0')}`;
+  const trendMonths = trendTab === '3M' ? 3 : trendTab === '6M' ? 6 : 12;
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      getHealthScore(),
+      getSpendingTrend(trendMonths),
+      getCategoryBreakdown(monthParam),
+      getInsightChips(monthParam),
+    ])
+      .then(([hs, trend, breakdown, chips]) => {
+        setHealthScore(hs);
+        setSpendingTrend(trend);
+        setCategoryBreakdown(breakdown);
+        setInsightChips(chips);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [monthParam, trendMonths]);
 
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthLabel = `${MONTHS[selectedMonth.month]} ${selectedMonth.year}`;
@@ -37,6 +61,7 @@ export default function InsightsScreen() {
         </TouchableOpacity>
       </View>
 
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} color={colors.green} />}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* AI Ask Card */}
         <View style={styles.section}>
@@ -79,10 +104,10 @@ export default function InsightsScreen() {
               <View>
                 <Text style={styles.healthLabel}>Financial Health Score</Text>
                 <View style={styles.healthScoreRow}>
-                  <Text style={styles.healthScore}>{mockHealthScore.score}</Text>
-                  <Text style={styles.healthMax}>/ {mockHealthScore.maxScore}</Text>
+                  <Text style={styles.healthScore}>{healthScore?.score ?? 0}</Text>
+                  <Text style={styles.healthMax}>/ {healthScore?.max_score ?? 100}</Text>
                   <Badge
-                    label={`${mockHealthScore.label} ↑`}
+                    label={`${healthScore?.label ?? ''} ↑`}
                     color={colors.greenLight}
                     bgColor="rgba(255,255,255,0.15)"
                     size="md"
@@ -90,12 +115,12 @@ export default function InsightsScreen() {
                 </View>
               </View>
               <Text style={styles.healthChange}>
-                +{mockHealthScore.change} vs {mockHealthScore.comparedTo}
+                +{healthScore?.change ?? 0} vs {healthScore?.compared_to ?? ''}
               </Text>
             </View>
             <View style={styles.healthBarWrap}>
               <ProgressBar
-                progress={mockHealthScore.score / mockHealthScore.maxScore}
+                progress={healthScore?.score ?? 0 / healthScore?.max_score ?? 100}
                 color={colors.green}
                 height={8}
               />
@@ -133,7 +158,7 @@ export default function InsightsScreen() {
                 ))}
               </View>
             </View>
-            <SparklineChart data={mockSpendingTrend} />
+            <SparklineChart data={spendingTrend} />
             <View style={styles.legendRow}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.green }]} />
@@ -151,7 +176,7 @@ export default function InsightsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Quick Insights</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-            {mockInsightChips.map((chip) => {
+            {insightChips.map((chip) => {
               const chipColors = {
                 green: { bg: colors.greenSoft, text: colors.green, border: colors.greenLight },
                 red: { bg: colors.redLight, text: colors.red, border: '#fecaca' },
@@ -182,7 +207,7 @@ export default function InsightsScreen() {
         <View style={styles.section}>
           <Card>
             <Text style={styles.breakdownTitle}>Category Breakdown</Text>
-            {mockCategoryBreakdown.map((cat) => {
+            {categoryBreakdown.map((cat) => {
               const info = categoryColors[cat.category] || categoryColors.other;
               return (
                 <View key={cat.category} style={styles.breakdownRow}>

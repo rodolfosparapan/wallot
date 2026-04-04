@@ -1,40 +1,58 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
 import { Card, CategoryIcon, ProgressBar, Badge, Divider } from '@/components/ui';
 import { ToggleRow } from '@/features/settings';
-import { mockBudgetLimits, mockAlerts } from '@/data/mock';
 import { formatCurrency } from '@/hooks/useEntries';
+import { getBudgetLimits, createBudgetLimit } from '@/services/budgetLimitService';
+import { getAlerts, updateAlert } from '@/services/alertService';
+import { BudgetLimit, Alert as AlertType } from '@/types';
 
 export default function LimitsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [alerts, setAlerts] = useState(mockAlerts);
-
-  const totalBudget = mockBudgetLimits.reduce((s, l) => s + l.limit_amount, 0);
-  const totalSpent = mockBudgetLimits.reduce((s, l) => s + l.spent_amount, 0);
-  const remaining = totalBudget - totalSpent;
-
+  const [limits, setLimits] = useState<BudgetLimit[]>([]);
+  const [alerts, setAlerts] = useState<AlertType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCategory, setNewCategory] = useState('food');
   const [newAmount, setNewAmount] = useState('');
 
   const categoryOptions = ['food', 'transport', 'housing', 'health', 'shopping', 'entertainment', 'education', 'other'];
 
-  const toggleAlert = (id: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
-    );
+  useEffect(() => {
+    Promise.all([getBudgetLimits(), getAlerts()])
+      .then(([l, a]) => { setLimits(l); setAlerts(a); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalBudget = limits.reduce((s, l) => s + l.limit_amount, 0);
+  const totalSpent = limits.reduce((s, l) => s + l.spent_amount, 0);
+  const remaining = totalBudget - totalSpent;
+
+  const toggleAlert = async (id: string) => {
+    const alert = alerts.find((a) => a.id === id);
+    if (!alert) return;
+    const updated = await updateAlert(id, !alert.enabled).catch(() => null);
+    if (updated) setAlerts((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const handleAddLimit = () => {
-    if (!newAmount.trim()) return;
-    setNewAmount('');
-    setNewCategory('food');
-    setShowAddModal(false);
+  const handleAddLimit = async () => {
+    const amount = parseFloat(newAmount.replace(',', '.'));
+    if (!amount || isNaN(amount)) return;
+    try {
+      const created = await createBudgetLimit({ category: newCategory, limit_amount: amount, period: 'monthly' });
+      setLimits((prev) => [...prev.filter((l) => l.category !== newCategory), created]);
+      setNewAmount('');
+      setNewCategory('food');
+      setShowAddModal(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.message ?? 'Failed to add limit.');
+    }
   };
 
   return (
@@ -50,6 +68,7 @@ export default function LimitsScreen() {
         </TouchableOpacity>
       </View>
 
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} color={colors.green} />}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Overview Strip */}
         <View style={styles.overviewRow}>
@@ -75,7 +94,7 @@ export default function LimitsScreen() {
         {/* Budget Limit Cards */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Budget Limits</Text>
-          {mockBudgetLimits.map((limit) => {
+          {limits.map((limit) => {
             const percentage = Math.round((limit.spent_amount / limit.limit_amount) * 100);
             const remaining = limit.limit_amount - limit.spent_amount;
             const info = categoryColors[limit.category] || categoryColors.other;

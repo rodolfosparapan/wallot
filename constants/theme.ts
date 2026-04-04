@@ -1,5 +1,5 @@
 export const colors = {
-  green: '#22c55e',
+  green: '#37aa61',
   greenDeep: '#14532d',
   greenDark: '#166534',
   greenMid: '#16a34a',
@@ -9,7 +9,7 @@ export const colors = {
   bg: '#f7f9f8',
   text: '#111917',
   textMid: '#3d6b52',
-  textMuted: '#7a9e8a',
+  textMuted: '#24322a',
   textDim: '#b0caba',
   red: '#ef4444',
   redLight: '#fef2f2',
@@ -21,16 +21,16 @@ export const colors = {
 };
 
 export const categoryColors: Record<string, { bg: string; icon: string; color: string }> = {
-  food: { bg: '#fff7ed', icon: 'fast-food', color: '#f97316' },
-  transport: { bg: '#eff6ff', icon: 'car', color: '#3b82f6' },
-  housing: { bg: '#f5f3ff', icon: 'home', color: '#8b5cf6' },
-  health: { bg: '#fdf2f8', icon: 'heart', color: '#ec4899' },
-  shopping: { bg: '#fffbeb', icon: 'bag-handle', color: '#f59e0b' },
-  entertainment: { bg: '#eef2ff', icon: 'game-controller', color: '#6366f1' },
-  education: { bg: '#f0fdfa', icon: 'book', color: '#14b8a6' },
-  other: { bg: '#f8fafc', icon: 'ellipsis-horizontal', color: '#64748b' },
-  salary: { bg: '#f0fdf4', icon: 'wallet', color: '#22c55e' },
-  freelance: { bg: '#f0fdf4', icon: 'laptop', color: '#16a34a' },
+  food: { bg: '#fff7ed', icon: 'fast-food-outline', color: '#f97316' },
+  transport: { bg: '#eff6ff', icon: 'car-outline', color: '#3b82f6' },
+  housing: { bg: '#f5f3ff', icon: 'home-outline', color: '#8b5cf6' },
+  health: { bg: '#fdf2f8', icon: 'heart-outline', color: '#ec4899' },
+  shopping: { bg: '#fffbeb', icon: 'bag-handle-outline', color: '#f59e0b' },
+  entertainment: { bg: '#eef2ff', icon: 'game-controller-outline', color: '#6366f1' },
+  education: { bg: '#f0fdfa', icon: 'book-outline', color: '#14b8a6' },
+  other: { bg: '#f8fafc', icon: 'ellipsis-horizontal-outline', color: '#64748b' },
+  salary: { bg: '#f0fdf4', icon: 'wallet-outline', color: '#22c55e' },
+  freelance: { bg: '#f0fdf4', icon: 'laptop-outline', color: '#16a34a' },
 };
 
 export const typography = {

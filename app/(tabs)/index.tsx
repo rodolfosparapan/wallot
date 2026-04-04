@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,14 +8,46 @@ import { Card, CategoryIcon, SectionTitle, ProgressBar } from '@/components/ui';
 import { BalanceCard } from '@/features/dashboard/BalanceCard';
 import { EntryMethodsRow } from '@/features/dashboard/EntryMethodsRow';
 import { RecentEntryRow } from '@/features/dashboard/RecentEntryRow';
-import { mockEntries, mockMonthSummary, mockUser } from '@/data/mock';
 import { getGreeting, formatCurrency } from '@/hooks/useEntries';
 import { categoryColors } from '@/constants/theme';
+import { useAuthStore } from '@/stores/authStore';
+import { getEntries, getMonthSummary } from '@/services/entryService';
+import { Entry, MonthSummary } from '@/types';
+
+function currentMonthParam() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const recentEntries = mockEntries.slice(0, 5);
+  const user = useAuthStore((s) => s.user);
+  const [summary, setSummary] = useState<MonthSummary>({ total_income: 0, total_expenses: 0, balance: 0, top_categories: [] });
+  const [recentEntries, setRecentEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const month = currentMonthParam();
+    Promise.all([
+      getMonthSummary(month),
+      getEntries({ page: 1, page_size: 5 }),
+    ])
+      .then(([s, e]) => {
+        setSummary(s as MonthSummary);
+        setRecentEntries((e as any).data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.green} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -28,7 +60,7 @@ export default function DashboardScreen() {
             </View>
             <View>
               <Text style={styles.greetLine}>{getGreeting()}</Text>
-              <Text style={styles.greetName}>{mockUser.full_name}</Text>
+              <Text style={styles.greetName}>{user?.full_name ?? ''}</Text>
             </View>
           </View>
           <View style={styles.headerActions}>
@@ -45,9 +77,9 @@ export default function DashboardScreen() {
         {/* Balance Card */}
         <View style={styles.section}>
           <BalanceCard
-            balance={mockMonthSummary.balance}
-            totalIncome={mockMonthSummary.total_income}
-            totalExpenses={mockMonthSummary.total_expenses}
+            balance={summary.balance}
+            totalIncome={summary.total_income}
+            totalExpenses={summary.total_expenses}
           />
         </View>
 
@@ -60,7 +92,7 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <SectionTitle title="Top Categories" action="See all" />
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {mockMonthSummary.top_categories.map((cat) => {
+            {summary.top_categories.map((cat: { category: string; amount: number; percentage: number }) => {
               const catInfo = categoryColors[cat.category] || categoryColors.other;
               return (
                 <Card key={cat.category} style={styles.categoryCard}>

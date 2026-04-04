@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
 import { categories } from '@/constants/categories';
 import { Category, EntryType } from '@/types';
+import { createEntry } from '@/services/entryService';
 
 const styles = StyleSheet.create({
   manualContent: {
@@ -117,10 +119,36 @@ const styles = StyleSheet.create({
 });
 
 export function ManualTab() {
+  const router = useRouter();
   const [entryType, setEntryType] = useState<EntryType>('expense');
   const [amount, setAmount] = useState('0');
   const [selectedCategory, setSelectedCategory] = useState<Category>('food');
   const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    const parsed = parseFloat(amount.replace(',', '.'));
+    if (!parsed || isNaN(parsed) || parsed <= 0) {
+      Alert.alert('Invalid amount', 'Please enter a valid amount.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await createEntry({
+        type: entryType,
+        amount: parsed,
+        category: selectedCategory,
+        description: description.trim(),
+        date: new Date().toISOString(),
+        source: 'manual',
+      });
+      router.back();
+    } catch (err: any) {
+      Alert.alert('Error', err.message ?? 'Failed to save entry.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.manualContent}>
@@ -209,9 +237,15 @@ export function ManualTab() {
       />
 
       {/* Save */}
-      <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8}>
-        <Ionicons name="checkmark" size={20} color="white" />
-        <Text style={styles.saveBtnText}>Save Entry</Text>
+      <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8} onPress={handleSave} disabled={saving}>
+        {saving ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <>
+            <Ionicons name="checkmark" size={20} color="white" />
+            <Text style={styles.saveBtnText}>Save Entry</Text>
+          </>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

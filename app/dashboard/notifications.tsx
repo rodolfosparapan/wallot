@@ -1,70 +1,57 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { getNotifications, markRead, markAllRead, Notification } from '@/services/notificationService';
 
-const mockNotifications = [
-  {
-    id: '1',
-    icon: 'alert-circle' as const,
-    iconColor: colors.red,
-    iconBg: colors.redLight,
-    title: 'Food budget exceeded',
-    body: "You've spent R$816 on food this month, 2% over your R$800 limit.",
-    time: '2h ago',
-    read: false,
-  },
-  {
-    id: '2',
-    icon: 'warning' as const,
-    iconColor: '#b45309',
-    iconBg: colors.yellowLight,
-    title: 'Transport near limit',
-    body: "You've used 83% of your transport budget (R$581 of R$700).",
-    time: '1d ago',
-    read: false,
-  },
-  {
-    id: '3',
-    icon: 'checkmark-circle' as const,
-    iconColor: colors.green,
-    iconBg: colors.greenLight,
-    title: 'Monthly salary received',
-    body: 'R$8,200 has been added as income.',
-    time: '2d ago',
-    read: true,
-  },
-  {
-    id: '4',
-    icon: 'stats-chart' as const,
-    iconColor: colors.blue,
-    iconBg: colors.blueLight,
-    title: 'Weekly summary ready',
-    body: 'You spent R$845 this week. Food and transport were your top categories.',
-    time: '3d ago',
-    read: true,
-  },
-  {
-    id: '5',
-    icon: 'trending-up' as const,
-    iconColor: colors.green,
-    iconBg: colors.greenLight,
-    title: 'Financial health improved',
-    body: 'Your health score went up 8 points to 72. Keep it up!',
-    time: '5d ago',
-    read: true,
-  },
-];
+function iconForType(type: string): { icon: any; iconColor: string; iconBg: string } {
+  switch (type) {
+    case 'over_limit':
+      return { icon: 'alert-circle', iconColor: colors.red, iconBg: colors.redLight };
+    case 'budget_warnings':
+      return { icon: 'warning', iconColor: '#b45309', iconBg: colors.yellowLight };
+    case 'weekly_summary':
+      return { icon: 'stats-chart', iconColor: colors.blue, iconBg: colors.blueLight };
+    default:
+      return { icon: 'notifications', iconColor: colors.green, iconBg: colors.greenLight };
+  }
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  useEffect(() => {
+    getNotifications()
+      .then(setNotifications)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const handleMarkAllRead = async () => {
+    await markAllRead().catch(console.error);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  const handleMarkRead = async (id: string) => {
+    await markRead(id).catch(console.error);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -74,35 +61,42 @@ export default function NotificationsScreen() {
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Notifications</Text>
         {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllRead}>
+          <TouchableOpacity onPress={handleMarkAllRead}>
             <Text style={styles.markRead}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.notifRow, !item.read && styles.notifRowUnread]}
-            activeOpacity={0.7}
-            onPress={() => setNotifications((prev) => prev.map((n) => n.id === item.id ? { ...n, read: true } : n))}
-          >
-            <View style={[styles.notifIcon, { backgroundColor: item.iconBg }]}>
-              <Ionicons name={item.icon} size={20} color={item.iconColor} />
-            </View>
-            <View style={styles.notifBody}>
-              <Text style={styles.notifTitle}>{item.title}</Text>
-              <Text style={styles.notifText}>{item.body}</Text>
-              <Text style={styles.notifTime}>{item.time}</Text>
-            </View>
-            {!item.read && <View style={styles.unreadDot} />}
-          </TouchableOpacity>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => {
+            const { icon, iconColor, iconBg } = iconForType(item.type);
+            return (
+              <TouchableOpacity
+                style={[styles.notifRow, !item.is_read && styles.notifRowUnread]}
+                activeOpacity={0.7}
+                onPress={() => handleMarkRead(item.id)}
+              >
+                <View style={[styles.notifIcon, { backgroundColor: iconBg }]}>
+                  <Ionicons name={icon} size={20} color={iconColor} />
+                </View>
+                <View style={styles.notifBody}>
+                  <Text style={styles.notifTitle}>{item.title}</Text>
+                  <Text style={styles.notifText}>{item.body}</Text>
+                  <Text style={styles.notifTime}>{timeAgo(item.created_at)}</Text>
+                </View>
+                {!item.is_read && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            );
+          }}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        />
+      )}
     </View>
   );
 }

@@ -4,10 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, shadows, typography } from '@/constants/theme';
 
 const METHODS = [
-  { icon: 'mic', label: 'Voice', primary: true },
-  { icon: 'camera', label: 'Photo', primary: false },
-  { icon: 'chatbubble', label: 'Chat', primary: false },
-  { icon: 'create', label: 'Manual', primary: false },
+  { icon: 'mic-outline', label: 'Voice', primary: true },
+  { icon: 'camera-outline', label: 'Photo', primary: false },
+  { icon: 'chatbubble-outline', label: 'Chat', primary: false },
+  { icon: 'create-outline', label: 'Manual', primary: false },
 ] as const;
 
 interface EntryMethodsRowProps {

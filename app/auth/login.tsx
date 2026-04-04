@@ -9,23 +9,44 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
 import { WLogo } from '@/components/WLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { login, register, toUser } from '@/services/authService';
+import { useAuthStore } from '@/stores/authStore';
+
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [isLogin, setIsLogin] = useState(true);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    router.replace('/(tabs)');
+  const handleSubmit = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = isLogin
+        ? await login(email.trim(), password)
+        : await register(email.trim(), password, fullName.trim() || email.trim());
+      setAuth(res.token, toUser(res));
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      Alert.alert('Error', err.message ?? 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -146,9 +167,15 @@ export default function LoginScreen() {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.8}>
-              <Text style={styles.submitText}>{isLogin ? 'Sign in' : 'Create account'}</Text>
-              <Ionicons name="arrow-forward" size={18} color={colors.white} />
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.8} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color={colors.white} />
+              ) : (
+                <>
+                  <Text style={styles.submitText}>{isLogin ? 'Sign in' : 'Create account'}</Text>
+                  <Ionicons name="arrow-forward" size={18} color={colors.white} />
+                </>
+              )}
             </TouchableOpacity>
           </View>
 

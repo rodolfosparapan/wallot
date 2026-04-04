@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
 import { CategoryIcon, FilterPill, Badge, Card } from '@/components/ui';
-import { mockEntries, mockMonthSummary } from '@/data/mock';
 import { formatCurrency, formatTime, groupEntriesByDate, getSourceLabel } from '@/hooks/useEntries';
+import { getEntries, getMonthSummary } from '@/services/entryService';
+import { Entry, MonthSummary } from '@/types';
 
 const filters = ['All', 'Expenses', 'Income', 'Food', 'Transport', 'Housing', 'Health'];
+
+function currentMonthParam() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export default function EntriesScreen() {
   const insets = useSafeAreaInsets();
@@ -18,32 +24,36 @@ export default function EntriesScreen() {
   const [filterSheetVisible, setFilterSheetVisible] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [summary, setSummary] = useState<MonthSummary>({ total_income: 0, total_expenses: 0, balance: 0, top_categories: [] });
+  const [loading, setLoading] = useState(true);
 
-  const filteredEntries = mockEntries.filter((entry) => {
-    if (search) {
-      const q = search.toLowerCase();
-      if (
-        !entry.description.toLowerCase().includes(q) &&
-        !entry.category.toLowerCase().includes(q)
-      )
-        return false;
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const month = currentMonthParam();
+    const typeParam = activeFilter === 'Expenses' ? 'expense' : activeFilter === 'Income' ? 'income' : undefined;
+    const categoryParam = ['Food', 'Transport', 'Housing', 'Health'].includes(activeFilter)
+      ? activeFilter.toLowerCase()
+      : undefined;
+    try {
+      const [e, s] = await Promise.all([
+        getEntries({ type: typeParam, category: categoryParam, search: search || undefined, page_size: 100 }),
+        getMonthSummary(month),
+      ]);
+      setEntries(e.data);
+      setSummary(s);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    switch (activeFilter) {
-      case 'Expenses':
-        return entry.type === 'expense';
-      case 'Income':
-        return entry.type === 'income';
-      case 'Food':
-      case 'Transport':
-      case 'Housing':
-      case 'Health':
-        return entry.category === activeFilter.toLowerCase();
-      default:
-        return true;
-    }
-  });
+  }, [activeFilter, search]);
 
-  const grouped = groupEntriesByDate(filteredEntries);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const grouped = groupEntriesByDate(entries);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -60,6 +70,7 @@ export default function EntriesScreen() {
         </View>
       </View>
 
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} color={colors.green} />}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Search */}
         <View style={styles.searchWrap}>
@@ -94,13 +105,13 @@ export default function EntriesScreen() {
           <Card style={[styles.summaryCard, { borderLeftWidth: 3, borderLeftColor: colors.green }]}>
             <Text style={styles.summaryLabel}>Income</Text>
             <Text style={[styles.summaryValue, { color: colors.green }]}>
-              {formatCurrency(mockMonthSummary.total_income)}
+              {formatCurrency(summary.total_income)}
             </Text>
           </Card>
           <Card style={[styles.summaryCard, { borderLeftWidth: 3, borderLeftColor: colors.red }]}>
             <Text style={styles.summaryLabel}>Expenses</Text>
             <Text style={[styles.summaryValue, { color: colors.red }]}>
-              {formatCurrency(mockMonthSummary.total_expenses)}
+              {formatCurrency(summary.total_expenses)}
             </Text>
           </Card>
         </View>

@@ -1,0 +1,6 @@
+@WallotApi_HostAddress = http://localhost:5140
+
+GET {{WallotApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

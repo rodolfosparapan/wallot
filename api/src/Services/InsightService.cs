@@ -135,9 +135,9 @@ public class InsightService : IInsightService
             .Where(b => b.UserId == userId && b.Period == "monthly")
             .ToListAsync();
 
-        var income = await _db.Entries
+        var income = (decimal)(await _db.Entries
             .Where(e => e.UserId == userId && e.Type == "income" && e.Date >= start && e.Date < end)
-            .SumAsync(e => (decimal?)e.Amount) ?? 0m;
+            .SumAsync(e => (double?)e.Amount) ?? 0.0);
 
         var chips = new List<InsightChipDto>();
 

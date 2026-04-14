@@ -27,9 +27,11 @@ public class BudgetLimitsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(BudgetLimitDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<BudgetLimitDto>> Create([FromBody] CreateBudgetLimitRequest req)
     {
         var limit = await _budgetLimitService.CreateAsync(CurrentUserId, req);
+        if (limit == null) return Conflict(new { message = "A budget limit for this category already exists." });
         return CreatedAtAction(nameof(GetAll), new { id = limit.Id }, limit);
     }
 

@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
 import { Card } from '@/components/ui';
+import { updateMe } from '@/services/userService';
+import { useAuthStore } from '@/stores/authStore';
 
 const currencies = [
   { code: 'BRL', symbol: 'R$', label: 'Brazilian Real', flag: '🇧🇷' },
@@ -17,7 +19,13 @@ const currencies = [
 export default function CurrencyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState('BRL');
+  const { user, setUser } = useAuthStore();
+  const [selected, setSelected] = useState(user?.currency ?? 'BRL');
+
+  const handleSelect = async (code: string) => {
+    setSelected(code);
+    updateMe({ currency: code }).then(setUser).catch(() => {});
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -35,7 +43,7 @@ export default function CurrencyScreen() {
             <View key={c.code}>
               <TouchableOpacity
                 style={styles.row}
-                onPress={() => setSelected(c.code)}
+                onPress={() => handleSelect(c.code)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.flag}>{c.flag}</Text>

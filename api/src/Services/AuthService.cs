@@ -15,20 +15,26 @@ public class AuthService : IAuthService
     private readonly WallotDbContext _db;
     private readonly IConfiguration _config;
     private readonly IAlertService _alertService;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(WallotDbContext db, IConfiguration config, IAlertService alertService)
+    public AuthService(WallotDbContext db, IConfiguration config, IAlertService alertService, ILogger<AuthService> logger)
     {
         _db = db;
         _config = config;
         _alertService = alertService;
+        _logger = logger;
     }
 
     public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
         if (user == null || !VerifyPassword(password, user.PasswordHash))
+        {
+            _logger.LogWarning("Failed login attempt for email {Email}", email.ToLower());
             throw new UnauthorizedAccessException("Invalid email or password.");
+        }
 
+        _logger.LogInformation("User {UserId} logged in", user.Id);
         return new AuthResponse
         {
             Token = GenerateJwtToken(user),
@@ -41,7 +47,10 @@ public class AuthService : IAuthService
     public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName)
     {
         if (await _db.Users.AnyAsync(u => u.Email == email.ToLower()))
+        {
+            _logger.LogWarning("Registration attempted with already-registered email {Email}", email.ToLower());
             throw new InvalidOperationException("An account with this email already exists.");
+        }
 
         var user = new AppUser
         {
@@ -53,6 +62,7 @@ public class AuthService : IAuthService
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
+        _logger.LogInformation("New user registered: {UserId} ({Email})", user.Id, user.Email);
         await _alertService.SeedDefaultAlertsAsync(user.Id);
 
         return new AuthResponse

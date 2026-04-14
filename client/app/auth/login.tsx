@@ -17,12 +17,13 @@ import { colors, typography, spacing, radius, shadows } from '@/constants/theme'
 import { WLogo } from '@/components/WLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { login, register, toUser } from '@/services/authService';
+import { getMe } from '@/services/userService';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const { setAuth, setUser } = useAuthStore();
   const [isLogin, setIsLogin] = useState(true);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -43,6 +44,7 @@ export default function LoginScreen() {
         ? await login(email.trim(), password)
         : await register(email.trim(), password, fullName.trim() || email.trim());
       setAuth(res.token, toUser(res));
+      getMe().then(setUser).catch(() => {});
       router.replace('/(tabs)');
     } catch (err: any) {
       setError(err.message ?? 'Something went wrong.');

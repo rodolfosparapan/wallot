@@ -11,6 +11,19 @@ using WallotApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Structured JSON logging in non-Development environments
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole(opts =>
+    {
+        opts.IncludeScopes     = true;
+        opts.TimestampFormat   = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        opts.UseUtcTimestamp   = true;
+        opts.JsonWriterOptions = new JsonWriterOptions { Indented = false };
+    });
+}
+
 // EF Core + SQLite
 builder.Services.AddDbContext<WallotDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -42,6 +55,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Health checks — AddDbContextCheck ships with EF Core, no extra packages needed
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<WallotDbContext>("sqlite");
 
 // CORS
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [];
@@ -98,6 +115,19 @@ app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
+        var logger = context.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("GlobalExceptionHandler");
+
+        var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (feature?.Error is not null)
+        {
+            logger.LogError(feature.Error,
+                "Unhandled exception on {Method} {Path}",
+                context.Request.Method,
+                context.Request.Path);
+        }
+
         context.Response.StatusCode = 500;
         context.Response.ContentType = "application/json";
         await context.Response.WriteAsJsonAsync(new { message = "An unexpected error occurred." });
@@ -107,5 +137,51 @@ app.UseExceptionHandler(errorApp =>
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Request logging — placed after auth so context.User is populated from JWT
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices
+        .GetRequiredService<ILoggerFactory>()
+        .CreateLogger("RequestLogger");
+
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    await next(context);
+    sw.Stop();
+
+    var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                 ?? "anonymous";
+
+    logger.LogInformation(
+        "{Method} {Path} → {StatusCode} | user={UserId} | {ElapsedMs}ms",
+        context.Request.Method,
+        context.Request.Path,
+        context.Response.StatusCode,
+        userId,
+        sw.ElapsedMilliseconds);
+});
+
+// Health check endpoint — unauthenticated, returns JSON with DB status
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (ctx, report) =>
+    {
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsync(JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name        = e.Key,
+                status      = e.Value.Status.ToString(),
+                duration_ms = e.Value.Duration.TotalMilliseconds
+            })
+        }));
+    }
+});
+
 app.MapControllers();
 app.Run();
+
+// Expose Program class for WebApplicationFactory in integration tests
+public partial class Program { }

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/git/wallot/**)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5140/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test\"}')",
+      "Bash(dotnet run:*)",
+      "Bash(curl -s -X POST http://localhost:5140/api/auth/register -H 'Content-Type: application/json' -d '{\"email\":\"testuser@wallot.test\",\"password\":\"Test1234!\",\"full_name\":\"Test User\"}')"
+    ]
+  }
+}

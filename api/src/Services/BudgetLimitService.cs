@@ -27,8 +27,12 @@ public class BudgetLimitService : IBudgetLimitService
         return result;
     }
 
-    public async Task<BudgetLimitDto> CreateAsync(string userId, CreateBudgetLimitRequest req)
+    public async Task<BudgetLimitDto?> CreateAsync(string userId, CreateBudgetLimitRequest req)
     {
+        var existing = await _db.BudgetLimits
+            .FirstOrDefaultAsync(b => b.UserId == userId && b.Category == req.Category);
+        if (existing != null) return null;
+
         var limit = new BudgetLimit
         {
             UserId = userId,
@@ -85,13 +89,13 @@ public class BudgetLimitService : IBudgetLimitService
 
         var end = period == "weekly" ? start.AddDays(7) : start.AddMonths(1);
 
-        return await _db.Entries
+        return (decimal)(await _db.Entries
             .Where(e => e.UserId == userId
                      && e.Category == category
                      && e.Type == "expense"
                      && e.Date >= start
                      && e.Date < end)
-            .SumAsync(e => (decimal?)e.Amount) ?? 0m;
+            .SumAsync(e => (double?)e.Amount) ?? 0.0);
     }
 
     private static BudgetLimitDto ToDto(BudgetLimit b, decimal spent) => new()

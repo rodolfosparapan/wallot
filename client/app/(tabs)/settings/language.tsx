@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { colors, typography, spacing, shadows } from '@/constants/theme';
 import { Card } from '@/components/ui';
+import { updateMe } from '@/services/userService';
+import { useAuthStore } from '@/stores/authStore';
 
 const languages = [
   { code: 'pt-BR', label: 'Português (Brasil)', flag: '🇧🇷' },
@@ -17,7 +19,13 @@ const languages = [
 export default function LanguageScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState('pt-BR');
+  const { user, setUser } = useAuthStore();
+  const [selected, setSelected] = useState(user?.language ?? 'pt-BR');
+
+  const handleSelect = (code: string) => {
+    setSelected(code);
+    updateMe({ language: code }).then(setUser).catch(() => {});
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -35,7 +43,7 @@ export default function LanguageScreen() {
             <View key={lang.code}>
               <TouchableOpacity
                 style={styles.langRow}
-                onPress={() => setSelected(lang.code)}
+                onPress={() => handleSelect(lang.code)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.flag}>{lang.flag}</Text>

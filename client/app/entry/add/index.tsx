@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { AITab } from '@/features/entry/AITab';
 import { ManualTab } from '@/features/entry/ManualTab';
-import { styles } from '@/features/entry/AddEntry.styles';
+import { useAddEntryStyles } from '@/features/entry/AddEntry.styles';
+import { useState } from 'react';
 
 export default function AddEntryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
+  const styles = useAddEntryStyles();
   const [activeTab, setActiveTab] = useState<'ai' | 'manual'>('ai');
 
   return (
@@ -18,7 +21,7 @@ export default function AddEntryScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color={colors.textMid} />
+          <Ionicons name="chevron-back" size={20} color={c.textMid} />
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Add Entry</Text>
         <View style={{ width: 40 }} />
@@ -34,7 +37,7 @@ export default function AddEntryScreen() {
             <Ionicons
               name="sparkles"
               size={14}
-              color={activeTab === 'ai' ? colors.white : colors.textMuted}
+              color={activeTab === 'ai' ? c.white : c.textMuted}
             />
             <Text style={[styles.tabText, activeTab === 'ai' && styles.tabTextActive]}>
               AI — Smart Entry
@@ -47,7 +50,7 @@ export default function AddEntryScreen() {
             <Ionicons
               name="create"
               size={14}
-              color={activeTab === 'manual' ? colors.white : colors.textMuted}
+              color={activeTab === 'manual' ? c.white : c.textMuted}
             />
             <Text style={[styles.tabText, activeTab === 'manual' && styles.tabTextActive]}>
               Manual

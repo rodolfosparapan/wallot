@@ -1,19 +1,25 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { typography, spacing, radius, shadows } from '@/constants/theme';
 import { Card, Divider, Button } from '@/components/ui';
 import { SettingsRow, ToggleRow } from '@/features/settings';
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeStore } from '@/stores/themeStore';
 import { updateMe } from '@/services/userService';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useIsDark } from '@/hooks/useThemeColors';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, setAuth, clearAuth, token } = useAuthStore();
-  const [darkMode, setDarkMode] = useState(false);
+  const { mode, setMode } = useThemeStore();
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+  const isDark = useIsDark();
   const [aiSuggestions, setAiSuggestions] = useState(true);
   const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [incomeGoalVisible, setIncomeGoalVisible] = useState(false);
@@ -69,7 +75,7 @@ export default function SettingsScreen() {
               <Text style={styles.profileEmail}>{email}</Text>
             </View>
             <TouchableOpacity style={styles.editBtn} onPress={() => setEditProfileVisible(true)}>
-              <Ionicons name="pencil" size={16} color={colors.white} />
+              <Ionicons name="pencil" size={16} color={c.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -84,7 +90,12 @@ export default function SettingsScreen() {
             <Divider />
             <SettingsRow icon="calendar" label="Month start" value="Day 1" onPress={() => Alert.alert('Coming soon', 'Month start setting will be available soon.')} />
             <Divider />
-            <ToggleRow icon="moon" label="Dark mode" value={darkMode} onValueChange={setDarkMode} />
+            <ToggleRow
+              icon="moon"
+              label="Dark mode"
+              value={isDark}
+              onValueChange={(val) => setMode(val ? 'dark' : 'light')}
+            />
           </Card>
         </View>
 
@@ -98,7 +109,7 @@ export default function SettingsScreen() {
             <Divider />
             <SettingsRow icon="download" label="Export data" value="CSV/PDF" onPress={() => Alert.alert('Coming soon', 'Data export will be available soon.')} />
             <Divider />
-            <SettingsRow icon="alert-circle" iconColor={colors.yellow} label="Limits & Alerts" onPress={() => router.push('/settings/limits')} />
+            <SettingsRow icon="alert-circle" iconColor={c.yellow} label="Limits & Alerts" onPress={() => router.push('/settings/limits')} />
           </Card>
         </View>
 
@@ -106,7 +117,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>AI & Privacy</Text>
           <Card>
-            <ToggleRow icon="sparkles" iconColor={colors.green} iconBg={colors.greenLight} label="AI suggestions" value={aiSuggestions} onValueChange={setAiSuggestions} />
+            <ToggleRow icon="sparkles" iconColor={c.green} iconBg={c.greenLight} label="AI suggestions" value={aiSuggestions} onValueChange={setAiSuggestions} />
             <Divider />
             <SettingsRow icon="shield-checkmark" label="Data & privacy policy" onPress={() => Alert.alert('Privacy policy', 'Your data is stored securely and never sold to third parties.')} />
           </Card>
@@ -138,7 +149,7 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.modalField}>
               <Text style={styles.modalLabel}>Email</Text>
-              <TextInput style={[styles.modalInput, { color: colors.textMuted }]} value={email} editable={false} keyboardType="email-address" autoCapitalize="none" />
+              <TextInput style={[styles.modalInput, { color: c.textMuted }]} value={email} editable={false} keyboardType="email-address" autoCapitalize="none" />
             </View>
             <View style={styles.modalActions}>
               <Button title="Cancel" variant="secondary" onPress={() => setEditProfileVisible(false)} style={{ flex: 1 }} />
@@ -168,112 +179,45 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-  },
-  pageTitle: {
-    fontSize: typography.xl,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: typography.xs,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  profileCard: {
-    backgroundColor: colors.greenDeep,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    ...shadows.green,
-  },
-  profileAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  profileName: {
-    fontSize: typography.lg,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  profileEmail: {
-    fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
-  },
-  editBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  footer: {
-    textAlign: 'center',
-    fontSize: typography.sm,
-    color: colors.textDim,
-    paddingVertical: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: radius.xxl,
-    borderTopRightRadius: radius.xxl,
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  modalTitle: {
-    fontSize: typography.lg,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  modalField: {
-    gap: spacing.sm,
-  },
-  modalLabel: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  modalInput: {
-    backgroundColor: colors.bg,
-    borderRadius: radius.base,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.base,
-    height: 48,
-    fontSize: typography.base,
-    color: colors.text,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: { paddingHorizontal: spacing.lg, paddingVertical: 14 },
+    pageTitle: { fontSize: typography.xl, fontWeight: '800', color: c.text },
+    section: { paddingHorizontal: spacing.lg, marginBottom: spacing.lg },
+    sectionLabel: {
+      fontSize: typography.xs, fontWeight: '700', color: c.textMuted,
+      textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10,
+    },
+    profileCard: {
+      backgroundColor: c.greenDeep, borderRadius: radius.xl,
+      padding: spacing.lg, flexDirection: 'row', alignItems: 'center', gap: 14, ...shadows.green,
+    },
+    profileAvatar: {
+      width: 56, height: 56, borderRadius: 20,
+      backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center',
+      borderWidth: 2, borderColor: 'rgba(255,255,255,0.15)',
+    },
+    profileName: { fontSize: typography.lg, fontWeight: '800', color: c.white },
+    profileEmail: { fontSize: typography.sm, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+    editBtn: {
+      width: 36, height: 36, borderRadius: 12,
+      backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center',
+    },
+    footer: { textAlign: 'center', fontSize: typography.sm, color: c.textDim, paddingVertical: 20 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+    modalSheet: {
+      backgroundColor: c.white, borderTopLeftRadius: radius.xxl,
+      borderTopRightRadius: radius.xxl, padding: spacing.xl, gap: spacing.lg,
+    },
+    modalTitle: { fontSize: typography.lg, fontWeight: '800', color: c.text },
+    modalField: { gap: spacing.sm },
+    modalLabel: { fontSize: typography.sm, fontWeight: '600', color: c.textMuted },
+    modalInput: {
+      backgroundColor: c.bg, borderRadius: radius.base,
+      borderWidth: 1, borderColor: c.border,
+      paddingHorizontal: spacing.base, height: 48, fontSize: typography.base, color: c.text,
+    },
+    modalActions: { flexDirection: 'row', gap: spacing.md },
+  });
+}

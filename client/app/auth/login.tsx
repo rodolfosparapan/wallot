@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,20 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { typography, spacing, radius, shadows } from '@/constants/theme';
 import { WLogo } from '@/components/WLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { login, register, toUser } from '@/services/authService';
 import { getMe } from '@/services/userService';
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { setAuth, setUser } = useAuthStore();
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [isLogin, setIsLogin] = useState(true);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -67,7 +70,7 @@ export default function LoginScreen() {
         <View style={[styles.hero, { paddingTop: insets.top + 24 }]}>
           <View style={styles.heroLogoRow}>
             <View style={styles.heroLogoWrap}>
-              <WLogo size={20} color={colors.green} />
+              <WLogo size={20} color={c.green} />
             </View>
             <Text style={styles.heroLogoName}>wallot</Text>
           </View>
@@ -107,12 +110,12 @@ export default function LoginScreen() {
                 <Text style={styles.fieldLabel}>Full name</Text>
                 <View style={styles.inputWrap}>
                   <View style={styles.inputIcon}>
-                    <Ionicons name="person" size={17} color={colors.textDim} />
+                    <Ionicons name="person" size={17} color={c.textDim} />
                   </View>
                   <TextInput
                     style={styles.input}
                     placeholder="Jonathan Silva"
-                    placeholderTextColor={colors.textDim}
+                    placeholderTextColor={c.textDim}
                     value={fullName}
                     onChangeText={setFullName}
                   />
@@ -124,12 +127,12 @@ export default function LoginScreen() {
               <Text style={styles.fieldLabel}>Email</Text>
               <View style={styles.inputWrap}>
                 <View style={styles.inputIcon}>
-                  <Ionicons name="mail" size={17} color={colors.textDim} />
+                  <Ionicons name="mail" size={17} color={c.textDim} />
                 </View>
                 <TextInput
                   style={styles.input}
                   placeholder="your@email.com"
-                  placeholderTextColor={colors.textDim}
+                  placeholderTextColor={c.textDim}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -142,12 +145,12 @@ export default function LoginScreen() {
               <Text style={styles.fieldLabel}>Password</Text>
               <View style={styles.inputWrap}>
                 <View style={styles.inputIcon}>
-                  <Ionicons name="lock-closed" size={17} color={colors.textDim} />
+                  <Ionicons name="lock-closed" size={17} color={c.textDim} />
                 </View>
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="••••••••"
-                  placeholderTextColor={colors.textDim}
+                  placeholderTextColor={c.textDim}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -159,7 +162,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
                     size={18}
-                    color={colors.textMuted}
+                    color={c.textMuted}
                   />
                 </TouchableOpacity>
               </View>
@@ -179,11 +182,11 @@ export default function LoginScreen() {
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} activeOpacity={0.8} disabled={loading}>
               {loading ? (
-                <ActivityIndicator color={colors.white} />
+                <ActivityIndicator color={c.white} />
               ) : (
                 <>
                   <Text style={styles.submitText}>{isLogin ? 'Sign in' : 'Create account'}</Text>
-                  <Ionicons name="arrow-forward" size={18} color={colors.white} />
+                  <Ionicons name="arrow-forward" size={18} color={c.white} />
                 </>
               )}
             </TouchableOpacity>
@@ -199,11 +202,11 @@ export default function LoginScreen() {
           {/* Social */}
           <View style={styles.socialCol}>
             <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Google login will be available soon.')}>
-              <Ionicons name="logo-google" size={20} color={colors.text} />
+              <Ionicons name="logo-google" size={20} color={c.text} />
               <Text style={styles.socialText}>Continue with Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Apple login will be available soon.')}>
-              <Ionicons name="logo-apple" size={20} color={colors.text} />
+              <Ionicons name="logo-apple" size={20} color={c.text} />
               <Text style={styles.socialText}>Continue with Apple</Text>
             </TouchableOpacity>
           </View>
@@ -220,197 +223,199 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  hero: {
-    backgroundColor: colors.greenDeep,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 36,
-  },
-  heroLogoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
-  },
-  heroLogoWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroLogoName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  heroTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.white,
-    lineHeight: 32,
-    marginBottom: 6,
-  },
-  heroSubtitle: {
-    fontSize: typography.sm,
-    color: 'rgba(187,247,208,0.6)',
-    fontWeight: '500',
-  },
-  formSection: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.xl,
-    ...shadows.sm,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radius.base,
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: colors.greenDeep,
-  },
-  tabText: {
-    fontSize: typography.sm,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  tabTextActive: {
-    color: colors.white,
-  },
-  form: {
-    gap: 12,
-    marginBottom: spacing.xl,
-  },
-  field: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    paddingLeft: 2,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 16,
-    height: 52,
-    ...shadows.sm,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: typography.base,
-    color: colors.text,
-  },
-  eyeBtn: {
-    padding: 6,
-  },
-  forgotLink: {
-    alignSelf: 'flex-end',
-  },
-  forgotText: {
-    fontSize: typography.sm,
-    color: colors.green,
-    fontWeight: '600',
-  },
-  submitBtn: {
-    backgroundColor: colors.greenDeep,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: radius.lg,
-    marginTop: 4,
-    ...shadows.green,
-  },
-  submitText: {
-    color: colors.white,
-    fontSize: typography.md,
-    fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontSize: typography.sm,
-    color: colors.textDim,
-    fontWeight: '500',
-  },
-  socialCol: {
-    gap: 10,
-    marginBottom: spacing.xl,
-  },
-  socialBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  socialText: {
-    fontSize: typography.base,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  termsText: {
-    fontSize: typography.xs,
-    color: colors.textDim,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  termsLink: {
-    color: colors.green,
-    fontWeight: '600',
-  },
-  errorBox: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: radius.base,
-    padding: 12,
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: typography.sm,
-    fontWeight: '500',
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    hero: {
+      backgroundColor: c.greenDeep,
+      paddingHorizontal: spacing.xl,
+      paddingBottom: 36,
+    },
+    heroLogoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 20,
+    },
+    heroLogoWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroLogoName: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: c.white,
+      letterSpacing: -0.5,
+    },
+    heroTitle: {
+      fontSize: 26,
+      fontWeight: '800',
+      color: c.white,
+      lineHeight: 32,
+      marginBottom: 6,
+    },
+    heroSubtitle: {
+      fontSize: typography.sm,
+      color: 'rgba(187,247,208,0.6)',
+      fontWeight: '500',
+    },
+    formSection: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.xl,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: c.white,
+      borderRadius: radius.lg,
+      padding: 4,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: spacing.xl,
+      ...shadows.sm,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: radius.base,
+      alignItems: 'center',
+    },
+    tabActive: {
+      backgroundColor: c.greenDeep,
+    },
+    tabText: {
+      fontSize: typography.sm,
+      fontWeight: '700',
+      color: c.textMuted,
+    },
+    tabTextActive: {
+      color: c.white,
+    },
+    form: {
+      gap: 12,
+      marginBottom: spacing.xl,
+    },
+    field: {
+      gap: 6,
+    },
+    fieldLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: c.textMuted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      paddingLeft: 2,
+    },
+    inputWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.white,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      paddingHorizontal: 16,
+      height: 52,
+      ...shadows.sm,
+    },
+    inputIcon: {
+      marginRight: 10,
+    },
+    input: {
+      flex: 1,
+      fontSize: typography.base,
+      color: c.text,
+    },
+    eyeBtn: {
+      padding: 6,
+    },
+    forgotLink: {
+      alignSelf: 'flex-end',
+    },
+    forgotText: {
+      fontSize: typography.sm,
+      color: c.green,
+      fontWeight: '600',
+    },
+    submitBtn: {
+      backgroundColor: c.greenDeep,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 16,
+      borderRadius: radius.lg,
+      marginTop: 4,
+      ...shadows.green,
+    },
+    submitText: {
+      color: c.white,
+      fontSize: typography.md,
+      fontWeight: '700',
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: spacing.lg,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: c.border,
+    },
+    dividerText: {
+      fontSize: typography.sm,
+      color: c.textDim,
+      fontWeight: '500',
+    },
+    socialCol: {
+      gap: 10,
+      marginBottom: spacing.xl,
+    },
+    socialBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingVertical: 14,
+      backgroundColor: c.white,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      ...shadows.sm,
+    },
+    socialText: {
+      fontSize: typography.base,
+      fontWeight: '600',
+      color: c.text,
+    },
+    termsText: {
+      fontSize: typography.xs,
+      color: c.textDim,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+    termsLink: {
+      color: c.green,
+      fontWeight: '600',
+    },
+    errorBox: {
+      backgroundColor: '#FEE2E2',
+      borderRadius: radius.base,
+      padding: 12,
+    },
+    errorText: {
+      color: '#DC2626',
+      fontSize: typography.sm,
+      fontWeight: '500',
+    },
+  });
+}

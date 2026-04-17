@@ -1,4 +1,4 @@
-export const colors = {
+export const lightColors = {
   green: '#37aa61',
   greenDeep: '#14532d',
   greenDark: '#166534',
@@ -19,6 +19,31 @@ export const colors = {
   blueLight: '#eff6ff',
   border: 'rgba(0,0,0,0.07)',
 };
+
+export const darkColors = {
+  green: '#37aa61',
+  greenDeep: '#14532d',
+  greenDark: '#166534',
+  greenMid: '#4ade80',
+  greenLight: '#1a3d25',
+  greenSoft: '#131f18',
+  white: '#1e2823',
+  bg: '#111916',
+  text: '#e8f0ec',
+  textMid: '#8db89e',
+  textMuted: '#6b9980',
+  textDim: '#3a5544',
+  red: '#f87171',
+  redLight: '#2a1515',
+  yellow: '#fbbf24',
+  yellowLight: '#1f1a0e',
+  blue: '#60a5fa',
+  blueLight: '#0f1a2e',
+  border: 'rgba(255,255,255,0.10)',
+};
+
+// Kept for components not yet migrated; prefer useThemeColors() in components
+export const colors = lightColors;
 
 export const categoryColors: Record<string, { bg: string; icon: string; color: string }> = {
   food: { bg: '#fff7ed', icon: 'fast-food-outline', color: '#f97316' },

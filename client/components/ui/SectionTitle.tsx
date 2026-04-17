@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/constants/theme';
+import { spacing, typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface SectionTitleProps {
   title: string;
@@ -9,6 +10,9 @@ interface SectionTitleProps {
 }
 
 export function SectionTitle({ title, action, onAction }: SectionTitleProps) {
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   return (
     <View style={styles.sectionTitleRow}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -21,23 +25,25 @@ export function SectionTitle({ title, action, onAction }: SectionTitleProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  sectionTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: typography.xs,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  sectionAction: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.green,
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    sectionTitleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: typography.xs,
+      fontWeight: '700',
+      color: c.textMuted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    sectionAction: {
+      fontSize: typography.sm,
+      fontWeight: '600',
+      color: c.green,
+    },
+  });
+}

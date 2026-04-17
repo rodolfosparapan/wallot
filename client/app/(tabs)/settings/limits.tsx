@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
+import { typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
 import { Card, CategoryIcon, ProgressBar, Badge, Divider } from '@/components/ui';
 import { ToggleRow } from '@/features/settings';
 import { formatCurrency } from '@/hooks/useEntries';
 import { getBudgetLimits, createBudgetLimit } from '@/services/budgetLimitService';
 import { getAlerts, updateAlert } from '@/services/alertService';
 import { BudgetLimit, Alert as AlertType } from '@/types';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function LimitsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [limits, setLimits] = useState<BudgetLimit[]>([]);
   const [alerts, setAlerts] = useState<AlertType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,15 +63,15 @@ export default function LimitsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color={colors.textMid} />
+          <Ionicons name="chevron-back" size={20} color={c.textMid} />
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Limits & Alerts</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
-          <Ionicons name="add" size={20} color={colors.white} />
+          <Ionicons name="add" size={20} color={c.white} />
         </TouchableOpacity>
       </View>
 
-      {loading && <ActivityIndicator style={{ marginTop: 20 }} color={colors.green} />}
+      {loading && <ActivityIndicator style={{ marginTop: 20 }} color={c.green} />}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Overview Strip */}
         <View style={styles.overviewRow}>
@@ -78,14 +81,14 @@ export default function LimitsScreen() {
           </Card>
           <Card style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Remaining</Text>
-            <Text style={[styles.overviewValue, { color: remaining >= 0 ? colors.green : colors.red }]}>
+            <Text style={[styles.overviewValue, { color: remaining >= 0 ? c.green : c.red }]}>
               {formatCurrency(remaining)}
             </Text>
           </Card>
           <Card style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Goal</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="checkmark-circle" size={14} color={colors.green} />
+              <Ionicons name="checkmark-circle" size={14} color={c.green} />
               <Text style={[styles.overviewValue, { fontSize: typography.sm }]}>On track</Text>
             </View>
           </Card>
@@ -96,36 +99,19 @@ export default function LimitsScreen() {
           <Text style={styles.sectionLabel}>Budget Limits</Text>
           {limits.map((limit) => {
             const percentage = Math.round((limit.spent_amount / limit.limit_amount) * 100);
-            const remaining = limit.limit_amount - limit.spent_amount;
+            const rem = limit.limit_amount - limit.spent_amount;
             const info = categoryColors[limit.category] || categoryColors.other;
 
             let status: { label: string; color: string; bgColor: string };
             if (percentage > 100) {
-              status = {
-                label: 'Over limit',
-                color: colors.red,
-                bgColor: colors.redLight,
-              };
+              status = { label: 'Over limit', color: c.red, bgColor: c.redLight };
             } else if (percentage >= 80) {
-              status = {
-                label: 'Near limit',
-                color: '#b45309',
-                bgColor: colors.yellowLight,
-              };
+              status = { label: 'Near limit', color: '#b45309', bgColor: c.yellowLight };
             } else {
-              status = {
-                label: 'On track',
-                color: colors.green,
-                bgColor: colors.greenSoft,
-              };
+              status = { label: 'On track', color: c.green, bgColor: c.greenSoft };
             }
 
-            const barColor =
-              percentage > 100
-                ? colors.red
-                : percentage >= 80
-                ? colors.yellow
-                : colors.green;
+            const barColor = percentage > 100 ? c.red : percentage >= 80 ? c.yellow : c.green;
 
             return (
               <Card key={limit.id} style={styles.limitCard}>
@@ -136,15 +122,9 @@ export default function LimitsScreen() {
                       <Text style={styles.limitName}>
                         {limit.category.charAt(0).toUpperCase() + limit.category.slice(1)}
                       </Text>
-                      <Badge
-                        label={status.label}
-                        color={status.color}
-                        bgColor={status.bgColor}
-                      />
+                      <Badge label={status.label} color={status.color} bgColor={status.bgColor} />
                     </View>
-                    <Text style={styles.limitSub}>
-                      Limit: {formatCurrency(limit.limit_amount)}
-                    </Text>
+                    <Text style={styles.limitSub}>Limit: {formatCurrency(limit.limit_amount)}</Text>
                   </View>
                 </View>
                 <View style={styles.limitBarRow}>
@@ -152,9 +132,7 @@ export default function LimitsScreen() {
                   <Text style={[styles.limitPct, { color: barColor }]}>{percentage}%</Text>
                 </View>
                 <Text style={styles.limitRemaining}>
-                  {remaining >= 0
-                    ? `${formatCurrency(remaining)} remaining`
-                    : `Over by ${formatCurrency(Math.abs(remaining))}`}
+                  {rem >= 0 ? `${formatCurrency(rem)} remaining` : `Over by ${formatCurrency(Math.abs(rem))}`}
                 </Text>
               </Card>
             );
@@ -168,27 +146,9 @@ export default function LimitsScreen() {
             {alerts.map((alert, i) => (
               <View key={alert.id}>
                 <ToggleRow
-                  icon={
-                    alert.type === 'budget_warnings'
-                      ? 'alert-circle'
-                      : alert.type === 'over_limit'
-                      ? 'warning'
-                      : 'calendar'
-                  }
-                  iconColor={
-                    alert.type === 'budget_warnings'
-                      ? colors.yellow
-                      : alert.type === 'over_limit'
-                      ? colors.red
-                      : colors.blue
-                  }
-                  iconBg={
-                    alert.type === 'budget_warnings'
-                      ? colors.yellowLight
-                      : alert.type === 'over_limit'
-                      ? colors.redLight
-                      : colors.blueLight
-                  }
+                  icon={alert.type === 'budget_warnings' ? 'alert-circle' : alert.type === 'over_limit' ? 'warning' : 'calendar'}
+                  iconColor={alert.type === 'budget_warnings' ? c.yellow : alert.type === 'over_limit' ? c.red : c.blue}
+                  iconBg={alert.type === 'budget_warnings' ? c.yellowLight : alert.type === 'over_limit' ? c.redLight : c.blueLight}
                   label={alert.label}
                   description={alert.description}
                   value={alert.enabled}
@@ -234,7 +194,7 @@ export default function LimitsScreen() {
                 onChangeText={setNewAmount}
                 keyboardType="decimal-pad"
                 placeholder="0,00"
-                placeholderTextColor={colors.textDim}
+                placeholderTextColor={c.textDim}
                 autoFocus
               />
             </View>
@@ -253,208 +213,67 @@ export default function LimitsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  pageTitle: {
-    fontSize: typography.lg,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: colors.greenDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.green,
-  },
-  overviewRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  overviewCard: {
-    flex: 1,
-    padding: spacing.base,
-    alignItems: 'center',
-  },
-  overviewLabel: {
-    fontSize: typography.xs,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  overviewValue: {
-    fontSize: typography.base,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: typography.xs,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  limitCard: {
-    marginBottom: 10,
-    padding: 16,
-  },
-  limitHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  limitNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  limitName: {
-    fontSize: typography.md,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  limitSub: {
-    fontSize: typography.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  limitBarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 6,
-  },
-  limitPct: {
-    fontSize: typography.sm,
-    fontWeight: '700',
-    width: 40,
-    textAlign: 'right',
-  },
-  limitRemaining: {
-    fontSize: typography.sm,
-    color: colors.textMuted,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  modalSheet: {
-    backgroundColor: colors.bg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: spacing.lg,
-    paddingBottom: 40,
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginBottom: spacing.lg,
-  },
-  modalTitle: {
-    fontSize: typography.lg,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
-  modalLabel: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-  },
-  catPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  catPillActive: {
-    backgroundColor: colors.greenSoft,
-    borderColor: colors.green,
-  },
-  catPillText: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.textMid,
-  },
-  catPillTextActive: {
-    color: colors.green,
-  },
-  amountInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: radius.base,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.base,
-    height: 52,
-    ...shadows.sm,
-  },
-  currencyPrefix: {
-    fontSize: typography.lg,
-    fontWeight: '700',
-    color: colors.textMuted,
-    marginRight: 8,
-  },
-  amountField: {
-    flex: 1,
-    fontSize: typography.xl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  saveBtn: {
-    backgroundColor: colors.green,
-    borderRadius: radius.base,
-    paddingVertical: spacing.base,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-    ...shadows.green,
-  },
-  saveBtnText: {
-    color: colors.white,
-    fontSize: typography.md,
-    fontWeight: '700',
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg, paddingVertical: 14,
+    },
+    backBtn: {
+      width: 40, height: 40, borderRadius: 14,
+      backgroundColor: c.white, borderWidth: 1, borderColor: c.border,
+      alignItems: 'center', justifyContent: 'center', ...shadows.sm,
+    },
+    pageTitle: { fontSize: typography.lg, fontWeight: '800', color: c.text },
+    addBtn: {
+      width: 40, height: 40, borderRadius: 14,
+      backgroundColor: c.greenDeep, alignItems: 'center', justifyContent: 'center', ...shadows.green,
+    },
+    overviewRow: { flexDirection: 'row', gap: 8, paddingHorizontal: spacing.lg, marginBottom: spacing.lg },
+    overviewCard: { flex: 1, padding: spacing.base, alignItems: 'center' },
+    overviewLabel: { fontSize: typography.xs, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+    overviewValue: { fontSize: typography.base, fontWeight: '700', color: c.text },
+    section: { paddingHorizontal: spacing.lg, marginBottom: spacing.lg },
+    sectionLabel: { fontSize: typography.xs, fontWeight: '700', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 },
+    limitCard: { marginBottom: 10, padding: 16 },
+    limitHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+    limitNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    limitName: { fontSize: typography.md, fontWeight: '700', color: c.text },
+    limitSub: { fontSize: typography.sm, color: c.textMuted, marginTop: 2 },
+    limitBarRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+    limitPct: { fontSize: typography.sm, fontWeight: '700', width: 40, textAlign: 'right' },
+    limitRemaining: { fontSize: typography.sm, color: c.textMuted },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+    modalSheet: {
+      backgroundColor: c.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+      padding: spacing.lg, paddingBottom: 40,
+    },
+    modalHandle: {
+      width: 40, height: 4, borderRadius: 2, backgroundColor: c.border,
+      alignSelf: 'center', marginBottom: spacing.lg,
+    },
+    modalTitle: { fontSize: typography.lg, fontWeight: '800', color: c.text, marginBottom: spacing.lg },
+    modalLabel: { fontSize: typography.sm, fontWeight: '600', color: c.textMuted, marginBottom: spacing.sm },
+    catPill: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.full,
+      backgroundColor: c.white, borderWidth: 1, borderColor: c.border,
+    },
+    catPillActive: { backgroundColor: c.greenSoft, borderColor: c.green },
+    catPillText: { fontSize: typography.sm, fontWeight: '600', color: c.textMid },
+    catPillTextActive: { color: c.green },
+    amountInput: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: c.white, borderRadius: radius.base,
+      borderWidth: 1, borderColor: c.border, paddingHorizontal: spacing.base, height: 52, ...shadows.sm,
+    },
+    currencyPrefix: { fontSize: typography.lg, fontWeight: '700', color: c.textMuted, marginRight: 8 },
+    amountField: { flex: 1, fontSize: typography.xl, fontWeight: '700', color: c.text },
+    saveBtn: {
+      backgroundColor: c.green, borderRadius: radius.base,
+      paddingVertical: spacing.base, alignItems: 'center', marginTop: spacing.lg, ...shadows.green,
+    },
+    saveBtnText: { color: c.white, fontSize: typography.md, fontWeight: '700' },
+  });
+}

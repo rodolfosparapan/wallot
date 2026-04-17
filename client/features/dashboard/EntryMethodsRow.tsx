@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, shadows, typography } from '@/constants/theme';
+import { shadows, typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 const METHODS = [
   { icon: 'mic-outline', label: 'Voice', primary: true },
@@ -15,6 +16,9 @@ interface EntryMethodsRowProps {
 }
 
 export function EntryMethodsRow({ onPress }: EntryMethodsRowProps) {
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   return (
     <View style={styles.methodsRow}>
       {METHODS.map((method) => (
@@ -28,7 +32,7 @@ export function EntryMethodsRow({ onPress }: EntryMethodsRowProps) {
             <Ionicons
               name={method.icon as any}
               size={22}
-              color={method.primary ? colors.white : colors.textMid}
+              color={method.primary ? c.white : c.textMid}
             />
           </View>
           <Text style={styles.methodLabel}>{method.label}</Text>
@@ -38,35 +42,37 @@ export function EntryMethodsRow({ onPress }: EntryMethodsRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  methodsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  methodPill: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-  },
-  methodIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  methodIconPrimary: {
-    backgroundColor: colors.green,
-    borderColor: colors.green,
-    borderWidth: 0,
-  },
-  methodLabel: {
-    fontSize: typography.xs,
-    fontWeight: '600',
-    color: colors.textMid,
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    methodsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    methodPill: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 6,
+    },
+    methodIcon: {
+      width: 54,
+      height: 54,
+      borderRadius: 20,
+      backgroundColor: c.white,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.sm,
+    },
+    methodIconPrimary: {
+      backgroundColor: c.green,
+      borderColor: c.green,
+      borderWidth: 0,
+    },
+    methodLabel: {
+      fontSize: typography.xs,
+      fontWeight: '600',
+      color: c.textMid,
+    },
+  });
+}

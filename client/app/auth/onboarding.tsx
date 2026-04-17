@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { typography, spacing, radius, shadows } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 const { width } = Dimensions.get('window');
 
@@ -22,12 +23,12 @@ const slides = [
     description:
       'Say "lunch R$87" or snap a receipt — Wallot\'s AI logs everything automatically. No forms, no friction.',
     bgColor: '#f0fdf4',
-    accentColor: colors.greenMid,
+    accentColor: '#16a34a',
     icon: 'mic' as const,
     bubbleText: '🍕 Lunch R$87',
     pillText: 'Logged! R$87',
-    pillBg: colors.greenLight,
-    pillTextColor: colors.greenDark,
+    pillBg: '#dcfce7',
+    pillTextColor: '#166534',
     step: '01 / 03',
   },
   {
@@ -63,6 +64,8 @@ const slides = [
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -92,8 +95,8 @@ export default function OnboardingScreen() {
         <View style={[styles.iconCircle, { backgroundColor: `${item.accentColor}20` }]}>
           <Ionicons name={item.icon} size={36} color={item.accentColor} />
         </View>
-        <View style={styles.chatBubble}>
-          <Text style={styles.chatBubbleText}>{item.bubbleText}</Text>
+        <View style={[styles.chatBubble, { backgroundColor: c.white }]}>
+          <Text style={[styles.chatBubbleText, { color: c.text }]}>{item.bubbleText}</Text>
         </View>
         <View style={[styles.confirmPill, { backgroundColor: item.pillBg, borderColor: `${item.accentColor}30` }]}>
           <Ionicons name="checkmark" size={13} color={item.pillTextColor} />
@@ -104,7 +107,7 @@ export default function OnboardingScreen() {
       <Text style={styles.slideTitle}>
         {item.titleParts.map((part, i) =>
           part.accent ? (
-            <Text key={i} style={{ color: colors.greenMid }}>{part.text}</Text>
+            <Text key={i} style={{ color: c.greenMid }}>{part.text}</Text>
           ) : (
             <Text key={i}>{part.text}</Text>
           )
@@ -135,7 +138,8 @@ export default function OnboardingScreen() {
               key={i}
               style={[
                 styles.dot,
-                i === currentIndex && styles.dotActive,
+                { backgroundColor: c.textDim },
+                i === currentIndex && { ...styles.dotActive, backgroundColor: c.greenDeep },
               ]}
             />
           ))}
@@ -150,7 +154,7 @@ export default function OnboardingScreen() {
             <Text style={styles.nextBtnText}>
               {currentIndex === slides.length - 1 ? 'Get started' : 'Next'}
             </Text>
-            <Ionicons name="arrow-forward" size={18} color={colors.white} />
+            <Ionicons name="arrow-forward" size={18} color={c.white} />
           </TouchableOpacity>
         </View>
       </View>
@@ -158,140 +162,138 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  slide: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: 60,
-  },
-  illustrationCard: {
-    width: 260,
-    height: 260,
-    borderRadius: 36,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-    position: 'relative',
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatBubble: {
-    backgroundColor: colors.white,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-    position: 'absolute',
-    top: 30,
-    left: 16,
-    ...shadows.sm,
-  },
-  chatBubbleText: {
-    fontSize: typography.base,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  confirmPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    position: 'absolute',
-    bottom: 36,
-    right: 10,
-  },
-  confirmPillText: {
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  stepNum: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textDim,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  slideTitle: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: colors.text,
-    lineHeight: 34,
-    letterSpacing: -0.5,
-    marginBottom: 12,
-  },
-  slideDescription: {
-    fontSize: typography.base,
-    color: colors.textMuted,
-    lineHeight: 24,
-    fontWeight: '500',
-  },
-  footer: {
-    paddingHorizontal: spacing.xxl,
-    gap: 20,
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.textDim,
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: colors.greenDeep,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  skipBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: radius.lg,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skipText: {
-    fontSize: typography.base,
-    color: colors.textMuted,
-    fontWeight: '700',
-  },
-  nextBtn: {
-    flex: 1,
-    backgroundColor: colors.greenDeep,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: radius.lg,
-    ...shadows.green,
-  },
-  getStartedBtn: {
-    backgroundColor: colors.green,
-  },
-  nextBtnText: {
-    color: colors.white,
-    fontSize: typography.base,
-    fontWeight: '800',
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    slide: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: 60,
+    },
+    illustrationCard: {
+      width: 260,
+      height: 260,
+      borderRadius: 36,
+      alignSelf: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 32,
+      position: 'relative',
+    },
+    iconCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 26,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chatBubble: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 16,
+      position: 'absolute',
+      top: 30,
+      left: 16,
+      ...shadows.sm,
+    },
+    chatBubbleText: {
+      fontSize: typography.base,
+      fontWeight: '600',
+    },
+    confirmPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      position: 'absolute',
+      bottom: 36,
+      right: 10,
+    },
+    confirmPillText: {
+      fontWeight: '700',
+      fontSize: 12,
+    },
+    stepNum: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: c.textDim,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: 12,
+    },
+    slideTitle: {
+      fontSize: 30,
+      fontWeight: '800',
+      color: c.text,
+      lineHeight: 34,
+      letterSpacing: -0.5,
+      marginBottom: 12,
+    },
+    slideDescription: {
+      fontSize: typography.base,
+      color: c.textMuted,
+      lineHeight: 24,
+      fontWeight: '500',
+    },
+    footer: {
+      paddingHorizontal: spacing.xxl,
+      gap: 20,
+    },
+    dots: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 6,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    dotActive: {
+      width: 24,
+    },
+    btnRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    skipBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderRadius: radius.lg,
+      backgroundColor: c.white,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    skipText: {
+      fontSize: typography.base,
+      color: c.textMuted,
+      fontWeight: '700',
+    },
+    nextBtn: {
+      flex: 1,
+      backgroundColor: c.greenDeep,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 16,
+      borderRadius: radius.lg,
+      ...shadows.green,
+    },
+    getStartedBtn: {
+      backgroundColor: c.green,
+    },
+    nextBtnText: {
+      color: c.white,
+      fontSize: typography.base,
+      fontWeight: '800',
+    },
+  });
+}

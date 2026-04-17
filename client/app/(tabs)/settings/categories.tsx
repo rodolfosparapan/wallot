@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, radius, shadows, categoryColors } from '@/constants/theme';
+import { typography, spacing, radius, shadows } from '@/constants/theme';
 import { CategoryIcon } from '@/components/ui';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 const allCategories = [
   { key: 'food', label: 'Food' },
@@ -20,7 +21,9 @@ const allCategories = [
 export default function CategoriesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [enabled, setEnabled] = useState(allCategories.map((c) => c.key));
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+  const [enabled, setEnabled] = useState(allCategories.map((cat) => cat.key));
 
   const toggle = (key: string) => {
     setEnabled((prev) =>
@@ -32,7 +35,7 @@ export default function CategoriesScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color={colors.textMid} />
+          <Ionicons name="chevron-back" size={20} color={c.textMid} />
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Default Categories</Text>
         <View style={{ width: 40 }} />
@@ -43,7 +46,6 @@ export default function CategoriesScreen() {
       <View style={styles.grid}>
         {allCategories.map((cat) => {
           const isOn = enabled.includes(cat.key);
-          const info = categoryColors[cat.key];
           return (
             <TouchableOpacity
               key={cat.key}
@@ -55,7 +57,7 @@ export default function CategoriesScreen() {
               <Text style={[styles.catLabel, isOn && styles.catLabelActive]}>{cat.label}</Text>
               {isOn && (
                 <View style={styles.checkBadge}>
-                  <Ionicons name="checkmark" size={10} color={colors.white} />
+                  <Ionicons name="checkmark" size={10} color={c.white} />
                 </View>
               )}
             </TouchableOpacity>
@@ -70,46 +72,48 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 14,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center', ...shadows.sm,
-  },
-  pageTitle: { fontSize: typography.lg, fontWeight: '800', color: colors.text },
-  subtitle: {
-    fontSize: typography.sm, color: colors.textMuted,
-    paddingHorizontal: spacing.lg, marginBottom: spacing.lg,
-  },
-  grid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg, gap: spacing.md,
-  },
-  catCard: {
-    width: '22%', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.white, borderRadius: radius.base,
-    padding: spacing.md, borderWidth: 1, borderColor: colors.border,
-    position: 'relative', ...shadows.sm,
-  },
-  catCardActive: {
-    borderColor: colors.green, backgroundColor: colors.greenSoft,
-  },
-  catLabel: { fontSize: typography.xs, fontWeight: '600', color: colors.textMid, textAlign: 'center' },
-  catLabelActive: { color: colors.greenMid },
-  checkBadge: {
-    position: 'absolute', top: 6, right: 6,
-    width: 16, height: 16, borderRadius: 8,
-    backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center',
-  },
-  saveBtn: {
-    margin: spacing.lg, backgroundColor: colors.green,
-    borderRadius: radius.base, paddingVertical: spacing.base,
-    alignItems: 'center', ...shadows.green,
-  },
-  saveBtnText: { color: colors.white, fontSize: typography.md, fontWeight: '700' },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg, paddingVertical: 14,
+    },
+    backBtn: {
+      width: 40, height: 40, borderRadius: 14,
+      backgroundColor: c.white, borderWidth: 1, borderColor: c.border,
+      alignItems: 'center', justifyContent: 'center', ...shadows.sm,
+    },
+    pageTitle: { fontSize: typography.lg, fontWeight: '800', color: c.text },
+    subtitle: {
+      fontSize: typography.sm, color: c.textMuted,
+      paddingHorizontal: spacing.lg, marginBottom: spacing.lg,
+    },
+    grid: {
+      flexDirection: 'row', flexWrap: 'wrap',
+      paddingHorizontal: spacing.lg, gap: spacing.md,
+    },
+    catCard: {
+      width: '22%', alignItems: 'center', gap: spacing.sm,
+      backgroundColor: c.white, borderRadius: radius.base,
+      padding: spacing.md, borderWidth: 1, borderColor: c.border,
+      position: 'relative', ...shadows.sm,
+    },
+    catCardActive: {
+      borderColor: c.green, backgroundColor: c.greenSoft,
+    },
+    catLabel: { fontSize: typography.xs, fontWeight: '600', color: c.textMid, textAlign: 'center' },
+    catLabelActive: { color: c.greenMid },
+    checkBadge: {
+      position: 'absolute', top: 6, right: 6,
+      width: 16, height: 16, borderRadius: 8,
+      backgroundColor: c.green, alignItems: 'center', justifyContent: 'center',
+    },
+    saveBtn: {
+      margin: spacing.lg, backgroundColor: c.green,
+      borderRadius: radius.base, paddingVertical: spacing.base,
+      alignItems: 'center', ...shadows.green,
+    },
+    saveBtnText: { color: c.white, fontSize: typography.md, fontWeight: '700' },
+  });
+}

@@ -12,11 +12,13 @@ public class AppUser
     [Required, MaxLength(256)]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
-    public string PasswordHash { get; set; } = string.Empty;
+    public string? PasswordHash { get; set; }
 
     [Required, MaxLength(200)]
     public string FullName { get; set; } = string.Empty;
+
+    [MaxLength(100)]
+    public string? GoogleId { get; set; }
 
     [MaxLength(500)]
     public string? AvatarUrl { get; set; }

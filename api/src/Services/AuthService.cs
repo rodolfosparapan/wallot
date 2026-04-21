@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WallotApi.Data;
@@ -28,7 +29,7 @@ public class AuthService : IAuthService
     public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
-        if (user == null || !VerifyPassword(password, user.PasswordHash))
+        if (user == null || user.PasswordHash == null || !VerifyPassword(password, user.PasswordHash))
         {
             _logger.LogWarning("Failed login attempt for email {Email}", email.ToLower());
             throw new UnauthorizedAccessException("Invalid email or password.");
@@ -65,6 +66,55 @@ public class AuthService : IAuthService
         _logger.LogInformation("New user registered: {UserId} ({Email})", user.Id, user.Email);
         await _alertService.SeedDefaultAlertsAsync(user.Id);
 
+        return new AuthResponse
+        {
+            Token = GenerateJwtToken(user),
+            UserId = user.Id,
+            Email = user.Email,
+            FullName = user.FullName
+        };
+    }
+
+    public async Task<AuthResponse> LoginWithGoogleAsync(string idToken)
+    {
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _config["Google:ClientId"] }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Google token validation failed: {Message}", ex.Message);
+            throw new UnauthorizedAccessException("Invalid Google token.");
+        }
+
+        var email = payload.Email.ToLower();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+        {
+            user = new AppUser
+            {
+                Email = email,
+                FullName = payload.Name ?? email,
+                GoogleId = payload.Subject,
+                AvatarUrl = payload.Picture
+            };
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("New user registered via Google: {UserId} ({Email})", user.Id, user.Email);
+            await _alertService.SeedDefaultAlertsAsync(user.Id);
+        }
+        else if (user.GoogleId == null)
+        {
+            user.GoogleId = payload.Subject;
+            await _db.SaveChangesAsync();
+        }
+
+        _logger.LogInformation("User {UserId} logged in via Google", user.Id);
         return new AuthResponse
         {
             Token = GenerateJwtToken(user),

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { typography, spacing, radius, shadows } from '@/constants/theme';
 import { WLogo } from '@/components/WLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { login, register, toUser } from '@/services/authService';
+import { login, loginWithGoogle, register, toUser } from '@/services/authService';
 import { getMe } from '@/services/userService';
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -34,6 +35,24 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { request: googleRequest, response: googleResponse, promptAsync: googlePromptAsync, exchangeForIdToken } = useGoogleAuth();
+
+  useEffect(() => {
+    if (googleResponse?.type !== 'success') {
+      if (googleResponse?.type === 'error') setError('Google sign-in was cancelled or failed.');
+      return;
+    }
+    setLoading(true);
+    exchangeForIdToken()
+      .then(loginWithGoogle)
+      .then((res) => {
+        setAuth(res.token, toUser(res));
+        getMe().then(setUser).catch(() => {});
+        router.replace('/(tabs)');
+      })
+      .catch((err: any) => setError(err.message ?? 'Google sign-in failed.'))
+      .finally(() => setLoading(false));
+  }, [googleResponse]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -201,7 +220,12 @@ export default function LoginScreen() {
 
           {/* Social */}
           <View style={styles.socialCol}>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.7} onPress={() => Alert.alert('Coming soon', 'Google login will be available soon.')}>
+            <TouchableOpacity
+              style={styles.socialBtn}
+              activeOpacity={0.7}
+              disabled={!googleRequest || loading}
+              onPress={() => { setError(null); googlePromptAsync(); }}
+            >
               <Ionicons name="logo-google" size={20} color={c.text} />
               <Text style={styles.socialText}>Continue with Google</Text>
             </TouchableOpacity>

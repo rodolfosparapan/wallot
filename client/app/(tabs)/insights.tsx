@@ -291,9 +291,12 @@ function SparklineChart({
 
   if (!data.length) return null;
 
-  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expenses]));
+  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expenses])) || 1;
   const getY = (val: number) => height - padding - ((val / maxVal) * (height - padding * 2));
-  const getX = (i: number) => padding + (i / (data.length - 1)) * (width - padding * 2);
+  const getX = (i: number) =>
+    data.length === 1
+      ? width / 2
+      : padding + (i / (data.length - 1)) * (width - padding * 2);
 
   const incomePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.income)}`).join(' ');
   const expensePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.expenses)}`).join(' ');

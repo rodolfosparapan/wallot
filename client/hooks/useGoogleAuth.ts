@@ -10,7 +10,9 @@ const DISCOVERY: AuthSession.DiscoveryDocument = {
 };
 
 export function useGoogleAuth() {
-  const redirectUri = 'https://auth.expo.io/@rodolfosparapan/wallot';
+  const redirectUri = AuthSession.makeRedirectUri({
+    native: `${process.env.EXPO_PUBLIC_GOOGLE_ANDROID_REVERSE_CLIENT_ID}:/oauth2redirect`,
+  });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {

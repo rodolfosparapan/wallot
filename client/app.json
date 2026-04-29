@@ -20,7 +20,14 @@
       "adaptiveIcon": {
         "backgroundColor": "#14532d"
       },
-      "package": "com.wallot.app"
+      "package": "com.wallot.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [{ "scheme": "com.googleusercontent.apps.YOUR_ANDROID_CLIENT_ID" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

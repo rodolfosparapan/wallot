@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -9,7 +9,8 @@ import {
   TextStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radius, shadows, typography } from '@/constants/theme';
+import { radius, shadows, typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -36,13 +37,17 @@ export function Button({
   textStyle,
   fullWidth,
 }: ButtonProps) {
+  const c = useThemeColors();
+
   const variantStyles = {
-    primary: { bg: colors.greenDeep, text: colors.white },
-    secondary: { bg: colors.white, text: colors.text },
-    ghost: { bg: 'transparent', text: colors.textMid },
-    danger: { bg: colors.redLight, text: colors.red },
+    primary: { bg: c.greenDeep, text: c.white },
+    secondary: { bg: c.white, text: c.text },
+    ghost: { bg: 'transparent', text: c.textMid },
+    danger: { bg: c.redLight, text: c.red },
   };
   const v = variantStyles[variant];
+
+  const styles = useMemo(() => makeStyles(), []);
 
   return (
     <TouchableOpacity
@@ -52,7 +57,7 @@ export function Button({
       style={[
         styles.button,
         { backgroundColor: v.bg },
-        variant === 'secondary' && { borderWidth: 1, borderColor: colors.border },
+        variant === 'secondary' && { borderWidth: 1, borderColor: c.border },
         fullWidth && { width: '100%' },
         disabled && { opacity: 0.5 },
         style,
@@ -70,21 +75,23 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: radius.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  buttonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: typography.base,
-    fontWeight: '700',
-  },
-});
+function makeStyles() {
+  return StyleSheet.create({
+    button: {
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderRadius: radius.base,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.sm,
+    },
+    buttonInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    buttonText: {
+      fontSize: typography.base,
+      fontWeight: '700',
+    },
+  });
+}

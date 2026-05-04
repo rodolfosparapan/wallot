@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { colors } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface AmountProps {
   value: number;
@@ -10,10 +10,12 @@ interface AmountProps {
 }
 
 export function Amount({ value, type = 'neutral', size = 'md', currency = 'BRL' }: AmountProps) {
+  const c = useThemeColors();
+
   const colorMap = {
-    income: colors.green,
-    expense: colors.red,
-    neutral: colors.text,
+    income: c.green,
+    expense: c.red,
+    neutral: c.text,
   };
   const sizeMap = { sm: 13, md: 16, lg: 22, xl: 32 };
   const formatted = new Intl.NumberFormat('pt-BR', {

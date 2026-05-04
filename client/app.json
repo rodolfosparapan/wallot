@@ -20,12 +20,22 @@
       "adaptiveIcon": {
         "backgroundColor": "#14532d"
       },
-      "package": "com.wallot.app"
+      "package": "com.wallot.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [{ "scheme": "com.googleusercontent.apps.208420273471-9essug8nvurmh15b5kr3drh7doqetngf" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      "expo-web-browser"
+    ]
   }
 }

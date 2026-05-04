@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, radius, shadows } from '@/constants/theme';
+import { typography, spacing, radius, shadows } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -30,7 +33,7 @@ export default function ChangePasswordScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color={colors.textMid} />
+          <Ionicons name="chevron-back" size={20} color={c.textMid} />
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Change Password</Text>
         <View style={{ width: 40 }} />
@@ -45,14 +48,14 @@ export default function ChangePasswordScreen() {
           <View key={label} style={styles.fieldGroup}>
             <Text style={styles.fieldLabel}>{label}</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed" size={18} color={colors.textMuted} />
+              <Ionicons name="lock-closed" size={18} color={c.textMuted} />
               <TextInput
                 style={styles.input}
                 value={value}
                 onChangeText={setter}
                 secureTextEntry
                 placeholder="••••••••"
-                placeholderTextColor={colors.textDim}
+                placeholderTextColor={c.textDim}
               />
             </View>
           </View>
@@ -66,32 +69,34 @@ export default function ChangePasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg, paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 14,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center', ...shadows.sm,
-  },
-  pageTitle: { fontSize: typography.lg, fontWeight: '800', color: colors.text },
-  form: { padding: spacing.lg, gap: spacing.lg },
-  fieldGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: typography.sm, fontWeight: '600', color: colors.textMuted },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.white, borderRadius: radius.base,
-    borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: spacing.base, height: 52, ...shadows.sm,
-  },
-  input: { flex: 1, fontSize: typography.base, color: colors.text },
-  saveBtn: {
-    backgroundColor: colors.green, borderRadius: radius.base,
-    paddingVertical: spacing.base, alignItems: 'center',
-    marginTop: spacing.sm, ...shadows.green,
-  },
-  saveBtnText: { color: colors.white, fontSize: typography.md, fontWeight: '700' },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.bg },
+    header: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg, paddingVertical: 14,
+    },
+    backBtn: {
+      width: 40, height: 40, borderRadius: 14,
+      backgroundColor: c.white, borderWidth: 1, borderColor: c.border,
+      alignItems: 'center', justifyContent: 'center', ...shadows.sm,
+    },
+    pageTitle: { fontSize: typography.lg, fontWeight: '800', color: c.text },
+    form: { padding: spacing.lg, gap: spacing.lg },
+    fieldGroup: { gap: spacing.sm },
+    fieldLabel: { fontSize: typography.sm, fontWeight: '600', color: c.textMuted },
+    inputWrap: {
+      flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+      backgroundColor: c.white, borderRadius: radius.base,
+      borderWidth: 1, borderColor: c.border,
+      paddingHorizontal: spacing.base, height: 52, ...shadows.sm,
+    },
+    input: { flex: 1, fontSize: typography.base, color: c.text },
+    saveBtn: {
+      backgroundColor: c.green, borderRadius: radius.base,
+      paddingVertical: spacing.base, alignItems: 'center',
+      marginTop: spacing.sm, ...shadows.green,
+    },
+    saveBtnText: { color: c.white, fontSize: typography.md, fontWeight: '700' },
+  });
+}

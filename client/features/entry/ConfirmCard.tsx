@@ -1,63 +1,25 @@
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryIcon } from '@/components/ui';
-import { colors, typography, radius } from '@/constants/theme';
+import { typography, radius } from '@/constants/theme';
 import { formatCurrency } from '@/hooks/useEntries';
-import { EntryData } from '@/types';
-
-const styles = StyleSheet.create({
-  confirmCard: {
-    backgroundColor: colors.greenSoft,
-    borderRadius: radius.base,
-    padding: 12,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: colors.greenLight,
-  },
-  confirmHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  confirmTitle: {
-    fontSize: typography.sm,
-    fontWeight: '700',
-    color: colors.green,
-  },
-  confirmBody: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  confirmDesc: {
-    fontSize: typography.base,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  confirmCat: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  confirmAmount: {
-    fontSize: typography.md,
-    fontWeight: '700',
-    color: colors.text,
-  },
-});
+import { Entry } from '@/types';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface ConfirmCardProps {
-  entryData: EntryData;
+  entryData: Partial<Entry>;
 }
 
 export function ConfirmCard({ entryData }: ConfirmCardProps) {
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const category = entryData.category || 'other';
 
   return (
     <View style={styles.confirmCard}>
       <View style={styles.confirmHeader}>
-        <Ionicons name="checkmark-circle" size={16} color={colors.green} />
+        <Ionicons name="checkmark-circle" size={16} color={c.green} />
         <Text style={styles.confirmTitle}>Entry logged</Text>
       </View>
       <View style={styles.confirmBody}>
@@ -74,4 +36,48 @@ export function ConfirmCard({ entryData }: ConfirmCardProps) {
       </View>
     </View>
   );
+}
+
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    confirmCard: {
+      backgroundColor: c.greenSoft,
+      borderRadius: radius.base,
+      padding: 12,
+      marginTop: 8,
+      borderWidth: 1,
+      borderColor: c.greenLight,
+    },
+    confirmHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 10,
+    },
+    confirmTitle: {
+      fontSize: typography.sm,
+      fontWeight: '700',
+      color: c.green,
+    },
+    confirmBody: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    confirmDesc: {
+      fontSize: typography.base,
+      fontWeight: '600',
+      color: c.text,
+    },
+    confirmCat: {
+      fontSize: typography.xs,
+      color: c.textMuted,
+      marginTop: 2,
+    },
+    confirmAmount: {
+      fontSize: typography.md,
+      fontWeight: '700',
+      color: c.text,
+    },
+  });
 }

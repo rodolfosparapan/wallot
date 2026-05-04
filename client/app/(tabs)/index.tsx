@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, spacing, shadows } from '@/constants/theme';
+import { typography, spacing, shadows, categoryColors } from '@/constants/theme';
 import { Card, CategoryIcon, SectionTitle, ProgressBar } from '@/components/ui';
 import { BalanceCard } from '@/features/dashboard/BalanceCard';
 import { EntryMethodsRow } from '@/features/dashboard/EntryMethodsRow';
 import { RecentEntryRow } from '@/features/dashboard/RecentEntryRow';
 import { getGreeting, formatCurrency } from '@/hooks/useEntries';
-import { categoryColors } from '@/constants/theme';
 import { useAuthStore } from '@/stores/authStore';
 import { getEntries, getMonthSummary } from '@/services/entryService';
 import { Entry, MonthSummary } from '@/types';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 function currentMonthParam() {
   const now = new Date();
@@ -23,6 +23,8 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [summary, setSummary] = useState<MonthSummary>({ total_income: 0, total_expenses: 0, balance: 0, top_categories: [] });
   const [recentEntries, setRecentEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +46,7 @@ export default function DashboardScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.green} />
+        <ActivityIndicator size="large" color={c.green} />
       </View>
     );
   }
@@ -56,7 +58,7 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View style={styles.userRow}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={22} color={colors.greenMid} />
+              <Ionicons name="person" size={22} color={c.greenMid} />
             </View>
             <View>
               <Text style={styles.greetLine}>{getGreeting()}</Text>
@@ -65,10 +67,10 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/dashboard/search')}>
-              <Ionicons name="search" size={20} color={colors.textMid} />
+              <Ionicons name="search" size={20} color={c.textMid} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerBtn} onPress={() => router.push('/dashboard/notifications')}>
-              <Ionicons name="notifications" size={20} color={colors.textMid} />
+              <Ionicons name="notifications" size={20} color={c.textMid} />
               <View style={styles.notifDot} />
             </TouchableOpacity>
           </View>
@@ -134,99 +136,101 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-  },
-  userRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: colors.greenLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.white,
-    ...shadows.sm,
-  },
-  greetLine: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  greetName: {
-    fontSize: typography.md,
-    color: colors.text,
-    fontWeight: '800',
-    marginTop: 1,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.red,
-    borderWidth: 1.5,
-    borderColor: colors.white,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  categoryCard: {
-    width: 140,
-    marginRight: 10,
-    padding: 14,
-    gap: 8,
-  },
-  categoryName: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.textMid,
-  },
-  categoryAmount: {
-    fontSize: typography.md,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  categoryBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryPct: {
-    fontSize: typography.xs,
-    fontWeight: '700',
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: 10,
+    },
+    userRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 16,
+      backgroundColor: c.greenLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: c.white,
+      ...shadows.sm,
+    },
+    greetLine: {
+      fontSize: typography.xs,
+      color: c.textMuted,
+      fontWeight: '500',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    greetName: {
+      fontSize: typography.md,
+      color: c.text,
+      fontWeight: '800',
+      marginTop: 1,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    headerBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      backgroundColor: c.white,
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.sm,
+    },
+    notifDot: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.red,
+      borderWidth: 1.5,
+      borderColor: c.white,
+    },
+    section: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.base,
+    },
+    categoryCard: {
+      width: 140,
+      marginRight: 10,
+      padding: 14,
+      gap: 8,
+    },
+    categoryName: {
+      fontSize: typography.sm,
+      fontWeight: '600',
+      color: c.textMid,
+    },
+    categoryAmount: {
+      fontSize: typography.md,
+      fontWeight: '700',
+      color: c.text,
+    },
+    categoryBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    categoryPct: {
+      fontSize: typography.xs,
+      fontWeight: '700',
+    },
+  });
+}

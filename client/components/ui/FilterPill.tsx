@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors, radius, typography } from '@/constants/theme';
+import { radius, typography } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface FilterPillProps {
   label: string;
@@ -9,6 +10,9 @@ interface FilterPillProps {
 }
 
 export function FilterPill({ label, active, onPress }: FilterPillProps) {
+  const c = useThemeColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -20,26 +24,28 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginRight: 8,
-  },
-  filterPillActive: {
-    backgroundColor: colors.greenDeep,
-    borderColor: colors.greenDeep,
-  },
-  filterPillText: {
-    fontSize: typography.sm,
-    fontWeight: '600',
-    color: colors.textMid,
-  },
-  filterPillTextActive: {
-    color: colors.white,
-  },
-});
+function makeStyles(c: ReturnType<typeof useThemeColors>) {
+  return StyleSheet.create({
+    filterPill: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: radius.full,
+      backgroundColor: c.white,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginRight: 8,
+    },
+    filterPillActive: {
+      backgroundColor: c.greenDeep,
+      borderColor: c.greenDeep,
+    },
+    filterPillText: {
+      fontSize: typography.sm,
+      fontWeight: '600',
+      color: c.textMid,
+    },
+    filterPillTextActive: {
+      color: c.white,
+    },
+  });
+}

@@ -1,9 +1,10 @@
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, shadows } from '@/constants/theme';
+import { typography, shadows } from '@/constants/theme';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 const styles = StyleSheet.create({
   msgBubble: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     borderBottomLeftRadius: 4,
     paddingHorizontal: 14,
@@ -12,17 +13,12 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   msgBubbleUser: {
-    backgroundColor: colors.greenDeep,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 4,
   },
   msgText: {
     fontSize: typography.base,
-    color: colors.text,
     lineHeight: 20,
-  },
-  msgTextUser: {
-    color: colors.white,
   },
 });
 
@@ -32,9 +28,15 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ content, isUser }: MessageBubbleProps) {
+  const c = useThemeColors();
+
   return (
-    <View style={[styles.msgBubble, isUser && styles.msgBubbleUser]}>
-      <Text style={[styles.msgText, isUser && styles.msgTextUser]}>
+    <View style={[
+      styles.msgBubble,
+      { backgroundColor: isUser ? c.greenDeep : c.white },
+      isUser && styles.msgBubbleUser,
+    ]}>
+      <Text style={[styles.msgText, { color: isUser ? '#ffffff' : c.text }]}>
         {content}
       </Text>
     </View>

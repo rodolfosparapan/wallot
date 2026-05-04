@@ -24,7 +24,7 @@
       "intentFilters": [
         {
           "action": "VIEW",
-          "data": [{ "scheme": "com.googleusercontent.apps.YOUR_ANDROID_CLIENT_ID" }],
+          "data": [{ "scheme": "com.googleusercontent.apps.208420273471-9essug8nvurmh15b5kr3drh7doqetngf" }],
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ]

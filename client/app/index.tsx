@@ -3,9 +3,13 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, typography } from '@/constants/theme';
 import { WLogo } from '@/components/WLogo';
+import { login, toUser } from '@/services/authService';
+import { getMe } from '@/services/userService';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { setAuth, setUser } = useAuthStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -22,7 +26,19 @@ export default function SplashScreen() {
       useNativeDriver: false,
     }).start();
 
-    const timer = setTimeout(() => {
+    const devEmail = process.env.EXPO_PUBLIC_DEV_EMAIL;
+    const devPassword = process.env.EXPO_PUBLIC_DEV_PASSWORD;
+
+    const timer = setTimeout(async () => {
+      if (__DEV__ && devEmail && devPassword) {
+        try {
+          const res = await login(devEmail, devPassword);
+          setAuth(res.token, toUser(res));
+          getMe().then(setUser).catch(() => {});
+          router.replace('/(tabs)');
+          return;
+        } catch {}
+      }
       router.replace('/auth/onboarding');
     }, 2200);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, radius, shadows } from '@/constants/theme';
@@ -55,6 +55,10 @@ export default function EntriesScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useFocusEffect(useCallback(() => {
+    fetchData();
+  }, [fetchData]));
 
   const grouped = groupEntriesByDate(entries);
 

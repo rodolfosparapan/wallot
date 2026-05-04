@@ -8,6 +8,6 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  mode: 'system',
+  mode: __DEV__ ? 'dark' : 'system',
   setMode: (mode) => set({ mode }),
 }));

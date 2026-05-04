@@ -11,7 +11,7 @@ function TabBarIcon({ name, label, focused }: { name: keyof typeof Ionicons.glyp
   return (
     <View style={styles.tabIconWrap}>
       <Ionicons name={name} size={22} color={focused ? c.greenDark : c.textMuted} />
-      <Text style={[styles.tabLabel, { color: focused ? c.greenDark : c.textDim }]}>{label}</Text>
+      <Text style={[styles.tabLabel, { color: focused ? c.greenDark : c.textDim }]} numberOfLines={1}>{label}</Text>
       {focused && <View style={[styles.activeDot, { backgroundColor: c.greenMid }]} />}
     </View>
   );
@@ -69,7 +69,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="insights"
         options={{
-          tabBarIcon: ({ focused }) => <TabBarIcon name="sparkles" label="Ask AI" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabBarIcon name="bulb" label="Ask AI" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -87,10 +87,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+    minWidth: 60,
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '600',
+    textAlign: 'center',
   },
   activeDot: {
     width: 4,

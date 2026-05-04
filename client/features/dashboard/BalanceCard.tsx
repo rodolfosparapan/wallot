@@ -50,6 +50,7 @@ function makeStyles(c: ReturnType<typeof useThemeColors>) {
       backgroundColor: c.greenDeep,
       borderRadius: radius.xxl,
       padding: spacing.xl,
+      marginTop: spacing.md,
       ...shadows.green,
     },
     balanceLabel: {

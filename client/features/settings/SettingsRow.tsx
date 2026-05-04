@@ -51,7 +51,7 @@ function makeStyles(c: ReturnType<typeof useThemeColors>) {
     settingsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 14,
+      paddingVertical: 7,
       gap: 12,
     },
     toggleIcon: {

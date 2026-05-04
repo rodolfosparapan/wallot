@@ -147,7 +147,7 @@ function makeStyles(c: ReturnType<typeof useThemeColors>) {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingVertical: 14,
+      paddingVertical: 10,
     },
     userRow: {
       flexDirection: 'row',
@@ -206,7 +206,7 @@ function makeStyles(c: ReturnType<typeof useThemeColors>) {
     },
     section: {
       paddingHorizontal: spacing.lg,
-      marginBottom: spacing.lg,
+      marginBottom: spacing.base,
     },
     categoryCard: {
       width: 140,
